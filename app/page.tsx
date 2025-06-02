@@ -1,103 +1,361 @@
-import Image from "next/image";
+"use client"
 
-export default function Home() {
+import { useState } from "react"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { Progress } from "@/components/ui/progress"
+import { Textarea } from "@/components/ui/textarea"
+import { Checkbox } from "@/components/ui/checkbox"
+import {
+  ShoppingCart,
+  Package,
+  Users,
+  AlertTriangle,
+  Plus,
+  DollarSign,
+  Eye,
+  Edit,
+  Trash2,
+  Bell,
+  Settings,
+  BarChart3,
+  Clock,
+  CheckCircle,
+  XCircle,
+  Star,
+  Gift,
+  Percent,
+  TrendingUp,
+} from "lucide-react"
+import { salesData, preOrders, Product } from "@/lib/data"
+import { useData } from "@/lib/use-data"
+import Link from "next/link"
+
+function DashboardComponent() {
+  const { products, salesData, preOrders, lowStockProducts } = useData()
+
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+    <div className="p-6 max-w-7xl mx-auto">
+      <div className="flex justify-between items-center mb-6">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
+          <p className="text-gray-600 mt-1">Selamat datang di VapeStore Management System</p>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+        <Button asChild>
+          <Link href="/pos">
+            <ShoppingCart className="mr-2 h-4 w-4" />
+            Buka POS
+          </Link>
+        </Button>
+      </div>
+
+      {/* Alert untuk stok rendah */}
+      {lowStockProducts.length > 0 && (
+        <Alert variant="destructive" className="mb-6">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>Peringatan Stok Rendah!</AlertTitle>
+          <AlertDescription>
+            {lowStockProducts.length} produk memiliki stok di bawah minimum.
+            <Button variant="link" className="p-0 h-auto ml-2" asChild>
+              <Link href="/inventory">Lihat detail</Link>
+            </Button>
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <Card className="relative overflow-hidden">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Penjualan Hari Ini</CardTitle>
+            <div className="p-2 bg-green-100 rounded-lg">
+              <DollarSign className="h-4 w-4 text-green-600" />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-gray-900">Rp 2.450.000</div>
+            <div className="flex items-center mt-2">
+              <TrendingUp className="h-3 w-3 text-green-600 mr-1" />
+              <p className="text-xs text-green-600 font-medium">+12% dari kemarin</p>
+            </div>
+          </CardContent>
+          <div className="absolute top-0 right-0 w-20 h-20 bg-green-50 rounded-full -mr-10 -mt-10"></div>
+        </Card>
+
+        <Card className="relative overflow-hidden">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Produk</CardTitle>
+            <div className="p-2 bg-blue-100 rounded-lg">
+              <Package className="h-4 w-4 text-blue-600" />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-gray-900">{products.length}</div>
+            <p className="text-xs text-gray-600 mt-2">5 kategori tersedia</p>
+          </CardContent>
+          <div className="absolute top-0 right-0 w-20 h-20 bg-blue-50 rounded-full -mr-10 -mt-10"></div>
+        </Card>
+
+        <Card className="relative overflow-hidden">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Stok Rendah</CardTitle>
+            <div className="p-2 bg-red-100 rounded-lg">
+              <AlertTriangle className="h-4 w-4 text-red-600" />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-red-600">{lowStockProducts.length}</div>
+            <p className="text-xs text-red-600 mt-2">Perlu reorder segera</p>
+          </CardContent>
+          <div className="absolute top-0 right-0 w-20 h-20 bg-red-50 rounded-full -mr-10 -mt-10"></div>
+        </Card>
+
+        <Card className="relative overflow-hidden">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Pre-Order</CardTitle>
+            <div className="p-2 bg-orange-100 rounded-lg">
+              <Clock className="h-4 w-4 text-orange-600" />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-gray-900">{preOrders.length}</div>
+            <p className="text-xs text-gray-600 mt-2">Menunggu konfirmasi</p>
+          </CardContent>
+          <div className="absolute top-0 right-0 w-20 h-20 bg-orange-50 rounded-full -mr-10 -mt-10"></div>
+        </Card>
+      </div>
+
+      {/* Main Content Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+        {/* Recent Sales */}
+        <Card className="lg:col-span-2">
+          <CardHeader className="flex flex-row items-center justify-between">
+            <div>
+              <CardTitle>Penjualan Terbaru</CardTitle>
+              <p className="text-sm text-gray-600 mt-1">Transaksi hari ini</p>
+            </div>
+            <Button variant="outline" size="sm" asChild>
+              <Link href="/reports">Lihat Semua</Link>
+            </Button>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {salesData.slice(0, 5).map((sale, index) => (
+                <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                      <Users className="h-5 w-5 text-blue-600" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-gray-900">{sale.customer}</p>
+                      <p className="text-sm text-gray-600">
+                        {sale.items} items • {sale.date}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-bold text-gray-900">Rp {sale.total.toLocaleString()}</p>
+                    <Badge variant="default" className="text-xs">
+                      Selesai
+                    </Badge>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Quick Actions */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Quick Actions</CardTitle>
+            <p className="text-sm text-gray-600">Aksi cepat untuk operasional</p>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <Button className="w-full justify-start" asChild>
+              <Link href="/pos">
+                <ShoppingCart className="mr-2 h-4 w-4" />
+                Buka POS Kasir
+              </Link>
+            </Button>
+            <Button variant="outline" className="w-full justify-start" asChild>
+              <Link href="/products">
+                <Package className="mr-2 h-4 w-4" />
+                Tambah Produk
+              </Link>
+            </Button>
+            <Button variant="outline" className="w-full justify-start" asChild>
+              <Link href="/inventory">
+                <AlertTriangle className="mr-2 h-4 w-4" />
+                Cek Stok Rendah
+              </Link>
+            </Button>
+            <Button variant="outline" className="w-full justify-start" asChild>
+              <Link href="/customers">
+                <Users className="mr-2 h-4 w-4" />
+                Kelola Pelanggan
+              </Link>
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Bottom Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Low Stock Products */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center">
+                <AlertTriangle className="h-5 w-5 text-red-500 mr-2" />
+                Stok Rendah
+              </CardTitle>
+              <p className="text-sm text-gray-600 mt-1">Produk yang perlu direstock</p>
+            </div>
+            <Button variant="outline" size="sm" asChild>
+              <Link href="/inventory">Kelola</Link>
+            </Button>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {lowStockProducts.length === 0 ? (
+                <div className="text-center py-6">
+                  <Package className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+                  <p className="text-gray-500">Semua produk stok aman</p>
+                </div>
+              ) : (
+                lowStockProducts.slice(0, 4).map((product) => (
+                  <div
+                    key={product.id}
+                    className="flex items-center justify-between p-3 border border-red-200 bg-red-50 rounded-lg"
+                  >
+                    <div className="flex items-center space-x-3">
+                      <img
+                        src={product.image || "/placeholder.svg"}
+                        alt={product.name}
+                        className="w-10 h-10 rounded-lg object-cover"
+                      />
+                      <div>
+                        <p className="font-medium text-gray-900">{product.name}</p>
+                        <p className="text-sm text-gray-600">{product.category}</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <Badge variant="destructive" className="mb-1">
+                        {product.stock} tersisa
+                      </Badge>
+                      <p className="text-xs text-gray-600">Min: {product.minStock}</p>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Top Products */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <Star className="h-5 w-5 text-yellow-500 mr-2" />
+              Produk Terlaris
+            </CardTitle>
+            <p className="text-sm text-gray-600 mt-1">Berdasarkan penjualan bulan ini</p>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {products.slice(0, 4).map((product, index) => (
+                <div key={product.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center">
+                      <span className="text-sm font-bold text-yellow-600">#{index + 1}</span>
+                    </div>
+                    <img
+                      src={product.image || "/placeholder.svg"}
+                      alt={product.name}
+                      className="w-10 h-10 rounded-lg object-cover"
+                    />
+                    <div>
+                      <p className="font-medium text-gray-900">{product.name}</p>
+                      <p className="text-sm text-gray-600">{product.category}</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-bold text-gray-900">{Math.floor(Math.random() * 50) + 10} terjual</p>
+                    <p className="text-sm text-gray-600">Rp {product.price.toLocaleString()}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
-  );
+  )
+}
+
+export default function VapeStoreSystem() {
+  const [activeTab, setActiveTab] = useState("dashboard")
+  const [cartItems, setCartItems] = useState([])
+  const [selectedProducts, setSelectedProducts] = useState([])
+  const { products } = useData()
+  const lowStockProducts = products.filter((p) => p.stock <= p.minStock)
+
+  const addToCart = (product: Product) => {
+    const existingItem = cartItems.find((item) => item.id === product.id)
+    if (existingItem) {
+      setCartItems(cartItems.map((item) => (item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item)))
+    } else {
+      setCartItems([...cartItems, { ...product, quantity: 1 }])
+    }
+  }
+
+  const removeFromCart = (productId) => {
+    setCartItems(cartItems.filter((item) => item.id !== productId))
+  }
+
+  const getTotalCart = () => {
+    return cartItems.reduce((total, item) => total + item.price * item.quantity, 0)
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <header className="bg-white shadow-sm border-b">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center py-4">
+            <div className="flex items-center">
+              <Package className="h-8 w-8 text-blue-600 mr-3" />
+              <h1 className="text-2xl font-bold text-gray-900">VapeStore Pro</h1>
+            </div>
+            <div className="flex items-center space-x-4">
+              <Button variant="outline" size="sm">
+                <Bell className="h-4 w-4 mr-2" />
+                Notifikasi
+                {lowStockProducts.length > 0 && (
+                  <Badge variant="destructive" className="ml-2">
+                    {lowStockProducts.length}
+                  </Badge>
+                )}
+              </Button>
+              <Button variant="outline" size="sm">
+                <Settings className="h-4 w-4 mr-2" />
+                Pengaturan
+              </Button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <DashboardComponent />
+    </div>
+  )
 }
