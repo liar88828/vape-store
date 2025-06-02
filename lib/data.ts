@@ -49,7 +49,7 @@ export const products: Product[] = [
     price: 85000,
     stock: 3,
     minStock: 10,
-    image: "/placeholder.svg?height=100&width=100",
+    image: 'https://signature.emkay.id/wp-content/uploads/2023/02/41.-Cara-Merawat-Vape-Agar-Bisa-Digunakan-Dalam-Jangka-Panjang.jpeg',
     description: "Liquid freebase rasa strawberry 60ml",
     nicotineLevel: "3mg",
     flavor: "Strawberry",
@@ -94,6 +94,71 @@ export const products: Product[] = [
     flavor: null,
     type: "Case",
   },
+    {
+        id: 6,
+        name: "Pod Silicone Cover",
+        category: "Aksesoris",
+        price: 35000,
+        stock: 15,
+        minStock: 5,
+        image: "/placeholder.svg?height=100&width=100",
+        description: "Pelindung silikon untuk pod agar tidak mudah rusak",
+        nicotineLevel: null,
+        flavor: null,
+        type: "Case",
+    },
+    {
+        id: 7,
+        name: "Lanyard Vape Stylish",
+        category: "Aksesoris",
+        price: 45000,
+        stock: 20,
+        minStock: 7,
+        image: "/placeholder.svg?height=100&width=100",
+        description: "Tali leher stylish untuk menggantung vape",
+        nicotineLevel: null,
+        flavor: null,
+        type: "Lanyard",
+    },
+    {
+        id: 8,
+        name: "Coil Jig Tool Kit",
+        category: "Aksesoris",
+        price: 95000,
+        stock: 12,
+        minStock: 4,
+        image: "/placeholder.svg?height=100&width=100",
+        description: "Toolkit lengkap untuk membentuk coil vape",
+        nicotineLevel: null,
+        flavor: null,
+        type: "Toolkit",
+    },
+    {
+        id: 9,
+        name: "Baterai Vape 18650",
+        category: "Aksesoris",
+        price: 110000,
+        stock: 9,
+        minStock: 3,
+        image: "/placeholder.svg?height=100&width=100",
+        description: "Baterai isi ulang 18650 untuk device vape",
+        nicotineLevel: null,
+        flavor: null,
+        type: "Battery",
+    },
+    {
+        id: 10,
+        name: "Car Charger Vape",
+        category: "Aksesoris",
+        price: 78000,
+        stock: 6,
+        minStock: 2,
+        image: "/placeholder.svg?height=100&width=100",
+        description: "Charger mobil untuk mengisi ulang device vape saat bepergian",
+        nicotineLevel: null,
+        flavor: null,
+        type: "Charger",
+    }
 ]
 
 export const salesData: SalesData[] = [
@@ -114,3 +179,121 @@ export const preOrders: PreOrder[] = [
     status: "Confirmed",
   },
 ]
+
+
+export type CustomerStatus = "verified" | "pending" | "rejected"
+
+export interface Customer {
+    id: string
+    name: string
+    age: number
+    totalPurchase: number
+    status: CustomerStatus
+    lastPurchase: string // YYYY-MM-DD format
+}
+
+export const exampleCustomerData: Customer[] = [
+    {
+        id: "1",
+        name: "Ahmad Santoso",
+        age: 25,
+        totalPurchase: 2450000,
+        status: "verified",
+        lastPurchase: "2024-01-15",
+    },
+    {
+        id: "2",
+        name: "Budi Pratama",
+        age: 22,
+        totalPurchase: 890000,
+        status: "verified",
+        lastPurchase: "2024-01-14",
+    },
+    {
+        id: "3",
+        name: "Citra Melati",
+        age: 19,
+        totalPurchase: 1200000,
+        status: "pending",
+        lastPurchase: "2024-01-13",
+    },
+    {
+        id: "4",
+        name: "Dina Rahmawati",
+        age: 30,
+        totalPurchase: 3300000,
+        status: "verified",
+        lastPurchase: "2024-01-10",
+    },
+    {
+        id: "5",
+        name: "Eka Hidayat",
+        age: 28,
+        totalPurchase: 500000,
+        status: "rejected",
+        lastPurchase: "2023-12-20",
+    },
+]
+export interface MemberTier {
+    name: string
+    range: string
+    progress: number
+    count: number
+}
+
+export const exampleMemberTierData: MemberTier[] = [
+    {
+        name: "Member Bronze",
+        range: "Pembelian < Rp 1.000.000",
+        progress: 75,
+        count: 156,
+    },
+    {
+        name: "Member Silver",
+        range: "Pembelian Rp 1.000.000 - 5.000.000",
+        progress: 45,
+        count: 89,
+    },
+    {
+        name: "Member Gold",
+        range: "Pembelian > Rp 5.000.000",
+        progress: 20,
+        count: 23,
+    },
+]
+
+export type SalesDataModal = {
+    date: string;
+    total: number;
+    items: number;
+    customer: string;
+    products: {
+            name: string;
+            category: string;
+            price: number;
+            quantity: number;
+        }[]
+
+}
+
+export const salesDataModal: SalesDataModal = {
+    date: "2024-01-15",
+    total: 2450000,
+    items: 18,
+    customer: "Ahmad S.",
+    products: [
+        {
+            name: "SMOK Nord 4",
+            category: "Device",
+            price: 450000,
+            quantity: 2,
+        },
+        {
+            name: "Liquid Menthol 60ml",
+            category: "Liquid",
+            price: 55000,
+            quantity: 5,
+        },
+    ],
+}
+
