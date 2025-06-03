@@ -1,3 +1,6 @@
+import { ActionResponse } from "@/interface/actionType";
+import { toast } from "sonner";
+import { Product } from "@prisma/client";
 
 export function variantStatus(flags: {
     default?: boolean;
@@ -19,6 +22,21 @@ export function formatRupiah(amount: number): string {
     });
 }
 
+export function formatRupiahShort(amount: number): string {
+    const formatter = new Intl.NumberFormat("id-ID", {
+        maximumFractionDigits: 1,
+    });
+
+    if (amount >= 1_000_000_000) {
+        return `Rp ${ formatter.format(amount / 1_000_000_000) }B`;
+    } else if (amount >= 1_000_000) {
+        return `Rp ${ formatter.format(amount / 1_000_000) }M`;
+    } else if (amount >= 1_000) {
+        return `Rp ${ formatter.format(amount / 1_000) }K`;
+    } else {
+        return `Rp ${ formatter.format(amount) }`;
+    }
+}
 export function getStatusLabel(status: string): string {
     switch (status) {
         case "verified":return "Terverifikasi";
@@ -32,4 +50,79 @@ export function choose<T>(...cases: [condition: boolean, result: T][]): T | unde
         if (cond) return result;
     }
     return undefined;
+}
+
+export function formatDateIndo(dateStr: Date, format = 'long') {
+    const date = new Date(dateStr);
+
+    if (format === 'long') {
+        return date.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+    } else if (format === 'numeric') {
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0'); // zero-based month
+        const year = date.getFullYear();
+        return `${ day }/${ month }/${ year }`;
+    } else {
+        throw new Error('Invalid format type. Use "long" or "numeric".');
+    }
+}
+
+export const toastResponse = (
+    {
+        response,
+        onSuccess = () => {
+        }
+    }: {
+        response: ActionResponse, onSuccess?: () => void
+    }
+) => {
+    if (response.success) {
+        toast.success(response.message)
+        onSuccess()
+    } else {
+        toast.error(response.message)
+    }
+}
+
+export const formatDateForInput = (date: string) => {
+    if (!date) return "";
+    const d = new Date(date);
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${ year }-${ month }-${ day }`;
+};
+
+export const formatDateTimeLocal = (date?: string | Date) => {
+    if (!date) return "";
+    const d = new Date(date);
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    const hours = String(d.getHours()).padStart(2, "0");
+    const minutes = String(d.getMinutes()).padStart(2, "0");
+    return `${ year }-${ month }-${ day }T${ hours }:${ minutes }`;
+};
+
+export function calculateAverage(numbers: number[]) {
+    if (!numbers.length) return 0;
+    const sum = numbers.reduce((acc, curr) => acc + curr, 0);
+    const avgData = sum / numbers.length;
+    return parseFloat(avgData.toFixed(2))
+}
+
+export function chooseStatus(status: string): string {
+    if (status === "verified") return "Terverifikasi";
+    if (status === "pending") return "Pending";
+    return "Ditolak";
+}
+
+export function getStatusVariant(status: string): "default" | "secondary" | "destructive" {
+    if (status === "verified") return "default";
+    if (status === "pending") return "secondary";
+    return "destructive";
+}
+
+export function totalProduct(products: Product[]) {
+    return products.reduce((a, b) => a + (b.price + b.price), 0);
 }

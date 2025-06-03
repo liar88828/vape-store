@@ -8,13 +8,32 @@ import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { Textarea } from "@/components/ui/textarea"
-import { Edit, Eye, Plus, Trash2 } from "lucide-react"
-import { products } from "@/lib/data"
-import { choose, variantStatus } from "@/lib/my-utils";
+import {
+    Dialog,
+    DialogClose,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger
+} from "@/components/ui/dialog"
+import { Eye, Pencil, Plus, Trash2 } from "lucide-react"
+import { choose, toastResponse, variantStatus } from "@/lib/my-utils";
+import { Product } from "@/lib/data";
+import { InputHook, SelectHook, TextareaHook } from "@/components/form-hook";
+import { FormProvider, useForm } from "react-hook-form";
+import { ProductModel, } from "@/lib/generated/zod";
+import { zodResolver } from "@hookform/resolvers/zod"
+import { addProduct, deleteProduct, updateProduct } from "@/action/product-action";
+import { toast } from "sonner";
+import { ProductModelType } from "@/lib/schema";
 
-export function ProductsPage() {
+interface ProductsPageProps {
+    products: Product[]
+}
+
+export function ProductsPage({ products }: ProductsPageProps) {
     const [ searchTerm, setSearchTerm ] = useState("")
     const [ categoryFilter, setCategoryFilter ] = useState("all")
     const [ nicotineFilter, setNicotineFilter ] = useState("all")
@@ -67,7 +86,7 @@ export function ProductsPage() {
                                 onChange={ (e) => setSearchTerm(e.target.value) }
                             />
                         </div>
-                        <div className="flex-nowrap flex gap-5  w-full md:w-fit md:justify-end  ">
+                        <div className="sm:flex-nowrap flex gap-5  w-full md:w-fit md:justify-end flex-wrap  ">
                             <div>
                                 <Label>Kategori</Label>
                                 <Select value={ categoryFilter } onValueChange={ setCategoryFilter }>
@@ -149,11 +168,13 @@ export function ProductsPage() {
                                 <TableRow key={ product.id }>
                                     <TableCell>
                                         <div className="flex items-center space-x-3">
-                                            <img
-                                                src={ product.image || "/placeholder.svg" }
-                                                alt={ product.name }
-                                                className="w-10 h-10 rounded object-cover"
-                                            />
+                                            <picture>
+                                                <img
+                                                    src={ product.image || "/placeholder.svg" }
+                                                    alt={ product.name }
+                                                    className="w-10 h-10 rounded object-cover"
+                                                />
+                                            </picture>
                                             <div>
                                                 <p className="font-medium">{ product.name }</p>
                                                 <p className="text-sm text-muted-foreground">{ product.description }</p>
@@ -183,13 +204,15 @@ export function ProductsPage() {
                                     </TableCell>
                                     <TableCell>
                                         <div className="flex space-x-2">
-                                            <Button size="sm" variant="outline">
-                                                <Eye className="h-3 w-3"/>
-                                            </Button>
-                                            <Button size="sm" variant="outline">
-                                                <Edit className="h-3 w-3"/>
-                                            </Button>
-                                            <Button size="sm" variant="outline">
+                                            <ProductDetailDialog product={ product }/>
+                                            <ModalProductUpdate product={ product }/>
+                                            <Button size="sm" variant="outline"
+                                                    onClick={ async () => {
+                                                        if (confirm('Are you Sure to Delete ?')) {
+                                                            toastResponse({ response: await deleteProduct(product.id) })
+                                                        }
+                                                    } }
+                                            >
                                                 <Trash2 className="h-3 w-3"/>
                                             </Button>
                                         </div>
@@ -204,9 +227,45 @@ export function ProductsPage() {
     )
 }
 
-function ModalProductTambah() {
+export function ModalProductTambah() {
+    const [ open, setOpen ] = useState(false);
+
+    const methods = useForm<ProductModelType>({
+        resolver: zodResolver(ProductModel),
+        defaultValues: {
+            id: 0,
+            name: "",
+            category: "",
+            price: 0,
+            stock: 0,
+            minStock: 0,
+            image: "https://picsum.photos/200/300",
+            description: "",
+            nicotineLevel: null,
+            flavor: null,
+            type: "",
+        }
+    });
+
+    const onSubmit = methods.handleSubmit(async (data) => {
+        // console.log(data)
+        const response = await addProduct(data);
+        if (response.success) {
+            toast(response.message);
+            setOpen(false); // ✅ Close the dialog
+        } else {
+            toast("You submitted the following values", {
+                description: (
+                    <pre className="mt-2 w-[320px] rounded-md bg-neutral-950 p-4">
+                  <code className="text-white">{ JSON.stringify(data, null, 2) }</code>
+                </pre>
+                )
+            })
+        }
+    });
+    // console.log(methods.formState.errors)
     return (
-        <Dialog>
+        <Dialog open={ open } onOpenChange={ setOpen }>
             <DialogTrigger asChild>
                 <Button>
                     <Plus className="h-4 w-4 mr-2"/>
@@ -217,64 +276,206 @@ function ModalProductTambah() {
                 <DialogHeader>
                     <DialogTitle>Tambah Produk Baru</DialogTitle>
                 </DialogHeader>
-                <div className="grid grid-cols-2 gap-4">
-                    <div>
-                        <Label>Nama Produk</Label>
-                        <Input placeholder="Nama produk"/>
-                    </div>
-                    <div>
-                        <Label>Kategori</Label>
-                        <Select>
-                            <SelectTrigger>
-                                <SelectValue placeholder="Pilih kategori"/>
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="device">Device</SelectItem>
-                                <SelectItem value="liquid">Liquid</SelectItem>
-                                <SelectItem value="coil">Coil</SelectItem>
-                                <SelectItem value="aksesoris">Aksesoris</SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </div>
-                    <div>
-                        <Label>Harga</Label>
-                        <Input type="number" placeholder="0"/>
-                    </div>
-                    <div>
-                        <Label>Stok Awal</Label>
-                        <Input type="number" placeholder="0"/>
-                    </div>
-                    <div>
-                        <Label>Level Nikotin (untuk liquid)</Label>
-                        <Select>
-                            <SelectTrigger>
-                                <SelectValue placeholder="Pilih level"/>
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="0mg">0mg</SelectItem>
-                                <SelectItem value="3mg">3mg</SelectItem>
-                                <SelectItem value="6mg">6mg</SelectItem>
-                                <SelectItem value="12mg">12mg</SelectItem>
-                                <SelectItem value="25mg">25mg (Salt Nic)</SelectItem>
-                                <SelectItem value="50mg">50mg (Salt Nic)</SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </div>
-                    <div>
-                        <Label>Rasa (untuk liquid)</Label>
-                        <Input placeholder="Rasa liquid"/>
-                    </div>
-                    <div className="col-span-2">
-                        <Label>Deskripsi</Label>
-                        <Textarea placeholder="Deskripsi produk"/>
-                    </div>
-                </div>
-                <DialogFooter>
-                    <Button>Simpan Produk</Button>
-                </DialogFooter>
+
+                <FormProvider { ...methods }>
+                    <form onSubmit={ onSubmit } className={ 'space-y-4' }>
+                        <div className="grid grid-cols-2 gap-4">
+                            <InputHook title="Nama Produk" name="name" placeholder="Nama produk"/>
+
+                            <SelectHook
+                                name="category"
+                                label="Kategori"
+                                placeholder="Pilih kategori"
+                                options={ [
+                                    { label: "Device", value: "device" },
+                                    { label: "Liquid", value: "liquid" },
+                                    { label: "Coil", value: "coil" },
+                                    { label: "Aksesoris", value: "aksesoris" },
+                                ] }
+                            />
+
+                            <InputHook name="price" title="Harga" placeholder="0" type="number"/>
+                            <InputHook name="stock" title="Stok Awal" placeholder="0" type="number"/>
+                            <InputHook name="minStock" title="Minimum Stok" placeholder="0" type="number"/>
+
+                            <SelectHook
+                                name="nicotineLevel"
+                                label="Level Nikotin (untuk liquid)"
+                                placeholder="Pilih level"
+                                options={ [
+                                    { label: "0mg", value: "0mg" },
+                                    { label: "3mg", value: "3mg" },
+                                    { label: "6mg", value: "6mg" },
+                                    { label: "12mg", value: "12mg" },
+                                    { label: "25mg (Salt Nic)", value: "25mg" },
+                                    { label: "50mg (Salt Nic)", value: "50mg" },
+                                ] }
+                            />
+
+                            <InputHook name="flavor" title="Rasa (untuk liquid)" placeholder="Rasa liquid"/>
+                            <InputHook name="type" title="Tipe Produk" placeholder="Tipe produk"/>
+
+
+                        </div>
+                        <InputHook name="image" title="URL Gambar" placeholder="Link gambar produk" type="text"/>
+                        <TextareaHook name="description" title="Deskripsi" placeholder="Deskripsi produk"/>
+                        <DialogFooter className="pt-4">
+                            <Button type="submit">Simpan Produk</Button>
+                        </DialogFooter>
+                    </form>
+                </FormProvider>
             </DialogContent>
         </Dialog>
     );
 }
 
-export default ProductsPage;
+export function ProductDetailDialog({ product }: { product: Product }) {
+
+    function DetailItem({ label, value }: { label: string; value: string | number }) {
+        return (
+            <div className="flex flex-col">
+                <span className="text-muted-foreground">{ label }</span>
+                <span className="font-medium">{ value }</span>
+            </div>
+        );
+    }
+
+    return (
+        <Dialog>
+            <DialogTrigger asChild>
+                <Button size="sm" variant="outline">
+                    <Eye className="h-3 w-3"/>
+                </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl sm:rounded-2xl shadow-lg">
+                <DialogTitle className="text-2xl font-semibold">{ product.name }</DialogTitle>
+                <DialogDescription className="mb-4 text-sm text-muted-foreground">
+                    Kategori: <span className="font-medium text-primary">{ product.category }</span>
+                </DialogDescription>
+
+                <div className="space-y-6">
+                    <div className="">
+                        <picture>
+                            <img
+                                src={ product.image }
+                                alt={ product.name }
+                                className="w-full h-80 object-cover rounded-xl border"
+                            />
+                        </picture>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm">
+                        <DetailItem label="Harga" value={ `Rp ${ product.price.toLocaleString() }` }/>
+                        <DetailItem label="Stok" value={ product.stock }/>
+                        <DetailItem label="Minimum Stok" value={ product.minStock }/>
+                        <DetailItem label="Tipe Produk" value={ product.type }/>
+                        { product.nicotineLevel && (
+                            <DetailItem label="Level Nikotin" value={ product.nicotineLevel }/>
+                        ) }
+                        { product.flavor && (
+                            <DetailItem label="Rasa" value={ product.flavor }/>
+                        ) }
+                    </div>
+
+                    <div>
+                        <h4 className="font-medium text-base mb-1">Deskripsi</h4>
+                        <p className="text-sm text-muted-foreground whitespace-pre-wrap">{ product.description }</p>
+                    </div>
+                </div>
+
+                <DialogClose asChild>
+                    <Button variant="default" className="mt-6 w-full sm:w-auto">
+                        Tutup
+                    </Button>
+                </DialogClose>
+            </DialogContent>
+        </Dialog>
+    );
+}
+
+export function ModalProductUpdate({ product }: { product: ProductModelType }) {
+    const [ open, setOpen ] = useState(false);
+
+    const methods = useForm<ProductModelType>({
+        resolver: zodResolver(ProductModel),
+        defaultValues: product,
+    });
+
+    const onSubmit = methods.handleSubmit(async (data) => {
+        const response = await updateProduct(data);
+        if (response.success) {
+            toast.success(response.message);
+            setOpen(false); // ✅ Close the dialog
+        } else {
+            toast.error(response.message, {
+                description: (
+                    <pre className="mt-2 w-[320px] rounded-md bg-neutral-950 p-4">
+            <code className="text-white">{ JSON.stringify(data, null, 2) }</code>
+          </pre>
+                ),
+            });
+        }
+    });
+    return (
+        <Dialog open={ open } onOpenChange={ setOpen }>
+            <DialogTrigger asChild>
+                <Button size="sm" variant="outline">
+                    <Pencil className="h-3 w-3"/>
+                </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl">
+                <DialogHeader>
+                    <DialogTitle>Perbarui Produk</DialogTitle>
+                </DialogHeader>
+
+                <FormProvider { ...methods }>
+                    <form onSubmit={ onSubmit } className="space-y-4">
+                        <div className="grid grid-cols-2 gap-4">
+                            <InputHook title="Nama Produk" name="name" placeholder="Nama produk"/>
+
+                            <SelectHook
+                                name="category"
+                                label="Kategori"
+                                placeholder="Pilih kategori"
+                                options={ [
+                                    { label: "Device", value: "device" },
+                                    { label: "Liquid", value: "liquid" },
+                                    { label: "Coil", value: "coil" },
+                                    { label: "Aksesoris", value: "aksesoris" },
+                                ] }
+                            />
+
+                            <InputHook name="price" title="Harga" placeholder="0" type="number"/>
+                            <InputHook name="stock" title="Stok Awal" placeholder="0" type="number"/>
+                            <InputHook name="minStock" title="Minimum Stok" placeholder="0" type="number"/>
+
+                            <SelectHook
+                                name="nicotineLevel"
+                                label="Level Nikotin (untuk liquid)"
+                                placeholder="Pilih level"
+                                options={ [
+                                    { label: "0mg", value: "0mg" },
+                                    { label: "3mg", value: "3mg" },
+                                    { label: "6mg", value: "6mg" },
+                                    { label: "12mg", value: "12mg" },
+                                    { label: "25mg (Salt Nic)", value: "25mg" },
+                                    { label: "50mg (Salt Nic)", value: "50mg" },
+                                ] }
+                            />
+
+                            <InputHook name="flavor" title="Rasa (untuk liquid)" placeholder="Rasa liquid"/>
+                            <InputHook name="type" title="Tipe Produk" placeholder="Tipe produk"/>
+                        </div>
+
+                        <InputHook name="image" title="URL Gambar" placeholder="Link gambar produk" type="text"/>
+                        <TextareaHook name="description" title="Deskripsi" placeholder="Deskripsi produk"/>
+
+                        <DialogFooter className="pt-4">
+                            <Button type="submit">Perbarui Produk</Button>
+                        </DialogFooter>
+                    </form>
+                </FormProvider>
+            </DialogContent>
+        </Dialog>
+    );
+}

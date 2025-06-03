@@ -4,16 +4,33 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { AlertTriangle, CheckCircle, Plus, XCircle } from "lucide-react"
-import { preOrders, Product, products } from "@/lib/data"
+import { AlertTriangle, CheckCircle, MinusIcon, Plus, XIcon } from "lucide-react"
 import { useState } from "react"
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Customer, Product } from "@prisma/client";
+import {
+    chooseStatus,
+    formatDateIndo,
+    formatRupiah,
+    getStatusVariant,
+    toastResponse,
+    totalProduct
+} from "@/lib/my-utils";
+import { preorderProduct } from "@/action/product-action";
+import { deletePreorderProduct, preOrderProduct, validPreorderProduct } from "@/action/inventory-action";
+import { SelectCustomer } from "@/components/pos-page";
 
-export function InventoryPage() {
-    const lowStockProducts = products.filter((p) => p.stock <= p.minStock)
+interface InventoryPageProps {
+    products: Product[],
+    preOrders: preorderProduct[]
+    lowStockProducts: Product[]
+    customers: Customer[]
+}
+
+export function InventoryPage({ products, preOrders, lowStockProducts, customers }: InventoryPageProps) {
 
     return (
         <div className="p-6 max-w-7xl mx-auto">
@@ -36,7 +53,8 @@ export function InventoryPage() {
                         <CardTitle>Total Nilai Inventori</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">Rp 15.750.000</div>
+                        <div
+                            className="text-2xl font-bold">{ formatRupiah(totalProduct(products)) }</div>
                         <p className="text-sm text-muted-foreground">Berdasarkan harga beli</p>
                     </CardContent>
                 </Card>
@@ -56,7 +74,8 @@ export function InventoryPage() {
                         <CardTitle>Pre-Order Aktif</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">{ preOrders.length }</div>
+                        <div
+                            className="text-2xl font-bold">{ preOrders.filter(item => item.status !== 'Success').length }</div>
                         <p className="text-sm text-muted-foreground">Menunggu kedatangan</p>
                     </CardContent>
                 </Card>
@@ -86,11 +105,13 @@ export function InventoryPage() {
                                 <TableRow key={ product.id }>
                                     <TableCell>
                                         <div className="flex items-center space-x-3">
-                                            <img
-                                                src={ product.image || "/placeholder.svg" }
-                                                alt={ product.name }
-                                                className="w-8 h-8 rounded object-cover"
-                                            />
+                                            <picture>
+                                                <img
+                                                    src={ product.image || "/placeholder.svg" }
+                                                    alt={ product.name }
+                                                    className="w-8 h-8 rounded object-cover"
+                                                />
+                                            </picture>
                                             <span className="font-medium">{ product.name }</span>
                                         </div>
                                     </TableCell>
@@ -100,7 +121,7 @@ export function InventoryPage() {
                                     <TableCell>{ product.minStock }</TableCell>
                                     <TableCell>{ product.minStock - product.stock + 10 }</TableCell>
                                     <TableCell>
-                                        <ReStockModal product={ product }/>
+                                        <ReStockModal product={ product } customers={ customers }/>
                                     </TableCell>
                                 </TableRow>
                             )) }
@@ -127,23 +148,36 @@ export function InventoryPage() {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            { preOrders.map((order) => (
-                                <TableRow key={ order.id }>
-                                    <TableCell>{ order.customer }</TableCell>
-                                    <TableCell>{ order.product }</TableCell>
-                                    <TableCell>{ order.quantity }</TableCell>
-                                    <TableCell>{ order.estimatedDate }</TableCell>
+                            { preOrders.map((preOrder) => (
+                                <TableRow key={ preOrder.id }>
+                                    <TableCell>{ preOrder.customer.name }</TableCell>
+                                    <TableCell>{ preOrder.product.name }</TableCell>
+                                    <TableCell>{ preOrder.quantity }</TableCell>
+                                    <TableCell>{ formatDateIndo(preOrder.estimatedDate) }</TableCell>
                                     <TableCell>
                                         <Badge
-                                            variant={ order.status === "Confirmed" ? "default" : "secondary" }>{ order.status }</Badge>
+                                            variant={ preOrder.status === "Confirmed" ? "default" : "secondary" }>{ preOrder.status }</Badge>
                                     </TableCell>
                                     <TableCell>
                                         <div className="flex space-x-2">
-                                            <Button size="sm" variant="outline">
+                                            <Button size="sm" variant="outline"
+                                                    onClick={ async () => {
+                                                        if (confirm('Stock Ready??')) {
+                                                            toastResponse({ response: await validPreorderProduct(preOrder.id) })
+                                                        }
+                                                    } }
+                                            >
                                                 <CheckCircle className="h-3 w-3"/>
                                             </Button>
-                                            <Button size="sm" variant="outline">
-                                                <XCircle className="h-3 w-3"/>
+                                            <Button size="sm" variant="outline"
+
+                                                    onClick={ async () => {
+                                                        if (confirm('Are You Sure to Delete ??')) {
+                                                            toastResponse({ response: await deletePreorderProduct(preOrder.id) })
+                                                        }
+                                                    } }
+                                            >
+                                                <XIcon className="h-3 w-3"/>
                                             </Button>
                                         </div>
                                     </TableCell>
@@ -153,16 +187,15 @@ export function InventoryPage() {
                     </Table>
                 </CardContent>
             </Card>
-
-
         </div>
     )
 }
 
-function ReStockModal({ product }: { product: Product }) {
+function ReStockModal({ product, customers }: { product: Product, customers: Customer[] }) {
     const [ isStockModalOpen, setIsStockModalOpen ] = useState(false)
     const [ stockQty, setStockQty ] = useState("")
     const [ productToAddStock, setProductToAddStock ] = useState<Product | null>(null)
+    const [ selectedCustomer, setSelectedCustomer ] = useState<Customer | null>(null)
 
     return (
         <Dialog open={ isStockModalOpen } onOpenChange={ setIsStockModalOpen }>
@@ -196,10 +229,33 @@ function ReStockModal({ product }: { product: Product }) {
                         </div>
                     </div>
                 ) }
+                <div className="">
+                    { selectedCustomer ? <div
+                            className={ 'border rounded-xl p-2 flex  items-end justify-between' }>
+                            <div className="">
+                                <h1 className="font-medium">{ selectedCustomer.name }</h1>
+                                <p className="text-sm text-muted-foreground">
+                                    Usia: { selectedCustomer.age } • Total
+                                    Belanja : <Badge
+                                    variant={ getStatusVariant(selectedCustomer.status) }>
+                                    { chooseStatus(selectedCustomer.status) }</Badge>
+                                </p>
+                            </div>
 
+                            <Button
+                                size="sm"
+                                onClick={ () => setSelectedCustomer(null) }>
+                                <MinusIcon/>
+                            </Button>
+                        </div>
+                        : <SelectCustomer
+                            customers={ customers }
+                            onSelectAction={ (customer) => setSelectedCustomer(customer) }
+                        /> }
+                </div>
                 <DialogFooter>
                     <Button
-                        onClick={ () => {
+                        onClick={ async () => {
                             const amount = parseInt(stockQty)
                             if (!isNaN(amount) && productToAddStock) {
                                 productToAddStock.stock += amount
@@ -207,6 +263,7 @@ function ReStockModal({ product }: { product: Product }) {
                                 setIsStockModalOpen(false)
                                 setStockQty("")
                                 setProductToAddStock(null)
+                                await preOrderProduct({ quantity: amount }, productToAddStock, selectedCustomer)
                             }
                         } }
                         disabled={ !stockQty }

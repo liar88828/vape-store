@@ -1,6 +1,6 @@
-"use client"
 import { ProductsPage } from "@/components/products-page"
+import { getProduct } from "@/action/product-action";
 
-export default function Products() {
-  return <ProductsPage />
+export default async function Products() {
+    return <ProductsPage products={ await getProduct() }/>
 }

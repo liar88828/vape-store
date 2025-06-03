@@ -1,17 +1,11 @@
-"use client"
+import { preOrders, products, salesData } from "@/lib/data"
 
-import { useMemo } from "react"
-import { products, salesData, preOrders } from "@/lib/data"
-
-export function useData() {
-  const lowStockProducts = useMemo(() => {
-    return products.filter((p) => p.stock <= p.minStock)
-  }, [])
+export function myData() {
 
   return {
     products,
     salesData,
     preOrders,
-    lowStockProducts,
+      lowStockProducts: products.filter((p) => p.stock <= p.minStock),
   }
 }

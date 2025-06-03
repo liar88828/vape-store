@@ -3,53 +3,56 @@
 import { usePathname } from "next/navigation"
 import Link from "next/link"
 import {
-  Package,
-  Home,
-  ShoppingCart,
-  Archive,
-  BarChart3,
-  Users,
-  Bell,
-  Settings,
-  AlertTriangle,
-  TrendingUp,
-  CreditCard,
-  User,
-  LogOut,
-  ChevronDown,
-  Zap,
-  Gift,
+    AlertTriangle,
+    Archive,
+    BarChart3,
+    Bell,
+    ChevronDown,
+    CreditCard,
+    Gift,
+    Home,
+    LogOut,
+    Package,
+    Settings,
+    ShoppingCart,
+    TrendingUp,
+    User,
+    Users,
+    Zap,
 } from "lucide-react"
 import {
-  Sidebar,
-  SidebarContent,
-  SidebarFooter,
-  SidebarHeader,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  SidebarTrigger,
-  SidebarGroup,
-  SidebarGroupLabel,
-  SidebarGroupContent,
-  SidebarSeparator,
+    Sidebar,
+    SidebarContent,
+    SidebarFooter,
+    SidebarGroup,
+    SidebarGroupContent,
+    SidebarGroupLabel,
+    SidebarHeader,
+    SidebarMenu,
+    SidebarMenuButton,
+    SidebarMenuItem,
+    SidebarSeparator,
+    SidebarTrigger,
 } from "@/components/ui/sidebar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { useData } from "@/lib/use-data"
+import { formatRupiahShort } from "@/lib/my-utils";
 
-export function AppSidebar() {
+export function AppSidebar({ lowStockProducts, totalTransaction, totalSellToday }: {
+    lowStockProducts: { stock: number }[],
+    totalTransaction: number,
+    totalSellToday: number
+}) {
   const pathname = usePathname()
-  const { lowStockProducts } = useData()
 
   const isActive = (path: string) => {
     return pathname === path
@@ -106,13 +109,13 @@ export function AppSidebar() {
   const quickActions = [
     {
       title: "Transaksi Hari Ini",
-      value: "156",
+        value: totalTransaction,
       icon: CreditCard,
       color: "text-green-600",
     },
     {
       title: "Penjualan",
-      value: "Rp 2.4M",
+        value: formatRupiahShort(totalSellToday),
       icon: TrendingUp,
       color: "text-blue-600",
     },

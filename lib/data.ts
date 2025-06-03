@@ -28,6 +28,35 @@ export interface PreOrder {
   status: string
 }
 
+export interface Customer {
+    id: string
+    name: string
+    age: number
+    totalPurchase: number
+    status: CustomerStatus
+    lastPurchase: string // YYYY-MM-DD format
+}
+
+export interface MemberTier {
+    name: string
+    range: string
+    progress: number
+    count: number
+}
+
+export type SalesDataModal = {
+    date: string;
+    total: number;
+    items: number;
+    customer: string;
+    products: {
+        name: string;
+        category: string;
+        price: number;
+        quantity: number;
+    }[]
+
+}
 export const products: Product[] = [
   {
     id: 1,
@@ -169,7 +198,14 @@ export const salesData: SalesData[] = [
 ]
 
 export const preOrders: PreOrder[] = [
-  { id: 1, customer: "Eko W.", product: "SMOK RPM 5", quantity: 2, estimatedDate: "2024-01-20", status: "Pending" },
+    {
+        id: 1,
+        customer: "Eko W.",
+        product: "SMOK RPM 5",
+        quantity: 2,
+        estimatedDate: "2024-01-20",
+        status: "Pending"
+    },
   {
     id: 2,
     customer: "Fitri N.",
@@ -182,15 +218,6 @@ export const preOrders: PreOrder[] = [
 
 
 export type CustomerStatus = "verified" | "pending" | "rejected"
-
-export interface Customer {
-    id: string
-    name: string
-    age: number
-    totalPurchase: number
-    status: CustomerStatus
-    lastPurchase: string // YYYY-MM-DD format
-}
 
 export const exampleCustomerData: Customer[] = [
     {
@@ -234,47 +261,7 @@ export const exampleCustomerData: Customer[] = [
         lastPurchase: "2023-12-20",
     },
 ]
-export interface MemberTier {
-    name: string
-    range: string
-    progress: number
-    count: number
-}
 
-export const exampleMemberTierData: MemberTier[] = [
-    {
-        name: "Member Bronze",
-        range: "Pembelian < Rp 1.000.000",
-        progress: 75,
-        count: 156,
-    },
-    {
-        name: "Member Silver",
-        range: "Pembelian Rp 1.000.000 - 5.000.000",
-        progress: 45,
-        count: 89,
-    },
-    {
-        name: "Member Gold",
-        range: "Pembelian > Rp 5.000.000",
-        progress: 20,
-        count: 23,
-    },
-]
-
-export type SalesDataModal = {
-    date: string;
-    total: number;
-    items: number;
-    customer: string;
-    products: {
-            name: string;
-            category: string;
-            price: number;
-            quantity: number;
-        }[]
-
-}
 
 export const salesDataModal: SalesDataModal = {
     date: "2024-01-15",

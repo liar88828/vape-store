@@ -1,26 +1,41 @@
 "use client"
 
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
-import { ChevronLeft, ChevronRight, Plus, ShoppingCart, Trash2 } from "lucide-react"
-import type { Product } from "@/lib/data"
+import { ChevronLeft, ChevronRight, MinusIcon, Plus, ShoppingCart, Trash2 } from "lucide-react"
+import { Customer, Product } from "@prisma/client";
+import { chooseStatus, formatRupiah, getStatusVariant, toastResponse } from "@/lib/my-utils";
+import { CartItem } from "@/interface/actionType";
+import {
+    Dialog,
+    DialogClose,
+    DialogContent,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger
+} from "@/components/ui/dialog";
+import { createTransaction } from "@/action/sale-action";
+import { Badge } from "@/components/ui/badge";
+import { FormProvider, useForm } from "react-hook-form";
+import { InputHook } from "@/components/form-hook";
+import { CustomerModelNew, CustomerModelType } from "@/lib/schema";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { createCustomerNew } from "@/action/customer-action";
 
-interface CartItem extends Product {
-    quantity: number
-}
-
-export function POSPage({ products }: { products: Product[] }) {
+export function POSPage({ products, customers }: { customers: Customer[], products: Product[] }) {
     const [ cartItems, setCartItems ] = useState<CartItem[]>([])
+    const [ selectedCustomer, setSelectedCustomer ] = useState<Customer | null>(null)
     const [ searchTerm, setSearchTerm ] = useState("")
     const [ categoryFilter, setCategoryFilter ] = useState("all")
     const [ currentPage, setCurrentPage ] = useState(1);
     const [ itemsPerPage, setItemsPerPage ] = useState(6);
-
+    const [ loading, setLoading ] = useState(false)
     const filteredProducts = products.filter((product) => {
         const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase())
         const matchesCategory = categoryFilter === "all" || product.category.toLowerCase() === categoryFilter.toLowerCase()
@@ -70,7 +85,7 @@ export function POSPage({ products }: { products: Product[] }) {
                                     onChange={ (e) => setSearchTerm(e.target.value) }
                                 />
                                 <Select value={ categoryFilter } onValueChange={ setCategoryFilter }>
-                                    <SelectTrigger >
+                                    <SelectTrigger>
                                         <SelectValue placeholder="Kategori"/>
                                     </SelectTrigger>
                                     <SelectContent>
@@ -85,7 +100,7 @@ export function POSPage({ products }: { products: Product[] }) {
                                     setItemsPerPage(Number(value));
                                     setCurrentPage(1); // Reset ke halaman pertama
                                 } }>
-                                    <SelectTrigger >
+                                    <SelectTrigger>
                                         <SelectValue placeholder="Tampil"/>
                                     </SelectTrigger>
                                     <SelectContent>
@@ -124,17 +139,20 @@ export function POSPage({ products }: { products: Product[] }) {
                                     <Card key={ product.id }
                                           className="cursor-pointer hover:shadow-md transition-shadow">
                                         <CardContent className="p-4">
-                                            <img
-                                                src={ product.image || "/placeholder.svg" }
-                                                alt={ product.name }
-                                                className="w-full h-40 object-cover rounded mb-2"
-                                            />
+                                            <picture>
+                                                <img
+                                                    src={ product.image || "/placeholder.svg" }
+                                                    alt={ product.name }
+                                                    className="w-full h-40 object-cover rounded mb-2"
+                                                />
+                                            </picture>
                                             <h3 className="font-medium text-sm mb-1">{ product.name }</h3>
                                             <p className="text-xs text-muted-foreground mb-2">{ product.category }</p>
                                             <div className="flex justify-between items-center">
-                                                <span
-                                                    className="font-bold text-sm">Rp { product.price.toLocaleString() }</span>
-                                                <Button size="sm" onClick={ () => addToCart(product) }
+                                                    <span
+                                                        className="font-bold text-sm">{ formatRupiah(product.price) }</span>
+                                                <Button size="sm"
+                                                        onClick={ () => addToCart(product) }
                                                         disabled={ product.stock === 0 }>
                                                     <Plus className="h-3 w-3"/>
                                                 </Button>
@@ -169,8 +187,8 @@ export function POSPage({ products }: { products: Product[] }) {
                                                     </p>
                                                 </div>
                                                 <div className="flex items-center space-x-2">
-                                                    <span
-                                                        className="font-medium">Rp { (item.price * item.quantity).toLocaleString() }</span>
+                                                        <span
+                                                            className="font-medium">{ formatRupiah(item.price * item.quantity) }</span>
                                                     <Button size="sm" variant="outline"
                                                             onClick={ () => removeFromCart(item.id) }>
                                                         <Trash2 className="h-3 w-3"/>
@@ -182,7 +200,7 @@ export function POSPage({ products }: { products: Product[] }) {
                                         <div className="border-t pt-4">
                                             <div className="flex justify-between items-center font-bold">
                                                 <span>Total:</span>
-                                                <span>Rp { getTotalCart().toLocaleString() }</span>
+                                                <span>{ formatRupiah(getTotalCart()) }</span>
                                             </div>
                                         </div>
 
@@ -196,10 +214,48 @@ export function POSPage({ products }: { products: Product[] }) {
                                                 </Label>
                                             </div>
                                         </div>
+                                        <div className="">
+                                            { selectedCustomer ? <div
+                                                    className={ 'border rounded-xl p-2 flex  items-end justify-between' }>
+                                                    <div className="">
+                                                        <h1 className="font-medium">{ selectedCustomer.name }</h1>
+                                                        <p className="text-sm text-muted-foreground">
+                                                            Usia: { selectedCustomer.age } • Total
+                                                            Belanja : <Badge
+                                                            variant={ getStatusVariant(selectedCustomer.status) }>
+                                                            { chooseStatus(selectedCustomer.status) }</Badge>
+                                                        </p>
+                                                    </div>
 
-                                        <Button className="w-full" size="lg">
-                                            <ShoppingCart className="h-4 w-4 mr-2"/>
-                                            Checkout
+                                                    <Button
+                                                        size="sm"
+                                                        onClick={ () => setSelectedCustomer(null) }>
+                                                        <MinusIcon/>
+                                                    </Button>
+                                                </div>
+                                                : <SelectCustomer
+                                                    customers={ customers }
+                                                    onSelectAction={ (customer) => setSelectedCustomer(customer) }
+                                                /> }
+
+                                        </div>
+                                        <Button className="w-full" size="lg"
+                                                disabled={ loading }
+                                                onClick={ async () => {
+                                                    setLoading(true)
+                                                    toastResponse({
+                                                        response: await createTransaction(cartItems, selectedCustomer),
+                                                        onSuccess: () => {
+                                                            setLoading(false)
+                                                            setSelectedCustomer(null)
+                                                            setCartItems([])
+                                                        }
+                                                    })
+                                                } }
+                                        >
+                                            <ShoppingCart
+                                                className="h-4 w-4 mr-2"/>
+                                            { loading ? "Loading ...." : 'Checkout' }
                                         </Button>
                                     </>
                                 ) }
@@ -210,4 +266,136 @@ export function POSPage({ products }: { products: Product[] }) {
             </div>
         </div>
     )
+}
+
+export function SelectCustomer(
+    {
+        customers,
+        onSelectAction,
+    }: {
+        customers: Customer[];
+        onSelectAction: (customer: Customer) => void;
+    }) {
+    const [ open, setOpen ] = useState(false);
+    const [ search, setSearch ] = useState("");
+    const [ loading, setLoading ] = useState(false)
+
+    const filteredCustomers = useMemo(() => {
+        return customers.filter((c) =>
+            c.name.toLowerCase().includes(search.toLowerCase())
+        );
+    }, [ customers, search ]);
+
+    const methods = useForm<CustomerModelType>({
+        resolver: zodResolver(CustomerModelNew),
+        defaultValues: {
+            name: "",
+        },
+    });
+
+    const onSubmit = methods.handleSubmit(async (data) => {
+        setLoading(true)
+        const response = await createCustomerNew(data)
+        toastResponse({
+                response,
+                onSuccess: () => {
+                    if (response.success && response.data) {
+                        onSelectAction(response.data);
+                        setOpen(false)
+                        setLoading(false)
+                    }
+                }
+            }
+        )
+        setLoading(false)
+    });
+
+    return (
+        <Dialog open={ open } onOpenChange={ setOpen }>
+            <DialogTrigger asChild>
+                <Button>
+                    Pilih Pelanggan
+                    <Plus className="h-3 w-3 ml-2"/>
+                </Button>
+            </DialogTrigger>
+
+            <DialogContent className="min-w-5xl">
+                <DialogHeader>
+                    <DialogTitle>Pilih Pelanggan</DialogTitle>
+                </DialogHeader>
+                <div className="grid grid-cols-2 gap-10">
+
+                    <div className="space-y-4">
+
+                        <Input
+                            placeholder="Cari nama pelanggan..."
+                            value={ search }
+                            onChange={ (e) => setSearch(e.target.value) }
+                        />
+
+                        <div className="space-y-2 max-h-[300px] overflow-y-auto">
+                            { filteredCustomers.length === 0 && (
+                                <p className="text-sm text-muted-foreground">Tidak ada pelanggan ditemukan.</p>
+                            ) }
+
+                            { filteredCustomers.map((customer) => (
+                                <DialogClose asChild key={ customer.id }>
+                                    <Button
+                                        variant="outline"
+                                        className="w-full justify-start text-left h-14"
+                                        onClick={ () => {
+                                            onSelectAction?.(customer);
+                                        } }
+                                    >
+                                        <div>
+                                            <h1 className="font-medium">{ customer.name }</h1>
+                                            <p className="text-sm text-muted-foreground">
+                                                Usia: { customer.age } • Total: { customer.totalPurchase } • Status
+                                                : <Badge
+                                                variant={ getStatusVariant(customer.status) }>
+                                                { chooseStatus(customer.status) }</Badge>
+                                            </p>
+                                        </div>
+                                    </Button>
+                                </DialogClose>
+                            )) }
+                        </div>
+                    </div>
+
+
+                    <div className="">
+
+
+                        <FormProvider { ...methods }>
+                            <form onSubmit={ onSubmit } className="grid gap-4">
+                                <InputHook name="name" title="Nama Pelangan Baru" placeholder="Nama pelanggan"/>
+                                {/*<InputHook name="age" title="Umur" placeholder="0" type="number"/>*/ }
+                                {/*<InputHook name="totalPurchase" title="Total Pembelian" placeholder="0" type="number"/>*/ }
+                                {/*<InputDateHook name="lastPurchase" title="Tanggal Pembelian Terakhir"*/ }
+                                {/*/>*/ }
+                                {/*<SelectHook*/ }
+                                {/*    name="status"*/ }
+                                {/*    label="Status"*/ }
+                                {/*    placeholder="Pilih status"*/ }
+                                {/*    options={ [*/ }
+                                {/*        { label: "Terverifikasi", value: "verified" },*/ }
+                                {/*        { label: "Pending", value: "pending" },*/ }
+                                {/*        { label: "Ditolak", value: "banned" },*/ }
+                                {/*    ] }*/ }
+                                {/*/>*/ }
+                                <DialogFooter>
+                                    <Button type="submit"
+                                            disabled={ loading }
+                                    >{ loading ? 'Loading...' : "Simpan" }
+                                    </Button>
+                                </DialogFooter>
+                            </form>
+                        </FormProvider>
+                    </div>
+
+                </div>
+
+            </DialogContent>
+        </Dialog>
+    );
 }

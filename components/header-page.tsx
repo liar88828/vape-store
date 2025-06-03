@@ -3,12 +3,12 @@
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Bell, Menu, Settings, } from "lucide-react"
-import { useData } from "@/lib/use-data"
+import { myData } from "@/lib/use-data"
 import type React from "react";
 import { useSidebar } from "@/components/ui/sidebar"
 
 export default function HeaderComponent() {
-    const { products } = useData()
+    const { products } = myData()
     const lowStockProducts = products.filter((p) => p.stock <= p.minStock)
     const { toggleSidebar } = useSidebar()
     return (<header className="bg-white shadow-sm border-b">

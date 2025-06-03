@@ -1,4 +1,4 @@
-"use client"
+'use client'
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -9,19 +9,53 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Progress } from "@/components/ui/progress"
-import { CheckCircle, Edit, Eye, Plus, Star, Users, XCircle } from "lucide-react"
-import { exampleCustomerData, exampleMemberTierData } from "@/lib/data";
-import { choose, formatRupiah, getStatusLabel, variantStatus } from "@/lib/my-utils";
+import { ChevronLeft, ChevronRight, Edit, Eye, Plus, Star, Users, XIcon } from "lucide-react"
+import { MemberTier } from "@/lib/data";
+import {
+    calculateAverage,
+    chooseStatus,
+    formatDateIndo,
+    formatRupiah,
+    getStatusVariant,
+    toastResponse
+} from "@/lib/my-utils";
+import { FormProvider, useForm } from "react-hook-form";
+import { CustomerModel } from "@/lib/generated/zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { InputDateHook, InputHook, SelectHook } from "@/components/form-hook";
+import { CustomerModelComplete } from "@/lib/schema";
+import { createCustomer, CustomerRelational, deleteCustomer, updateCustomer } from "@/action/customer-action";
+import { useState } from "react";
 
-export function CustomersPage() {
+interface CustomersPageProps {
+    customers: CustomerRelational[],
+    members: MemberTier[]
+}
+
+export function CustomersPage({ customers, members }: CustomersPageProps) {
+    const [ selectStatusCustomer, setSelectStatusCustomer ] = useState('all')
+    const [ searchTerm, setSearchTerm ] = useState("")
+    const [ categoryFilter, setCategoryFilter ] = useState("all")
+    const [ currentPage, setCurrentPage ] = useState(1);
+    const [ itemsPerPage, setItemsPerPage ] = useState(6);
+
+    const filteredCustomer = customers.filter((customer) => {
+        const matchesSearch = customer.name.toLowerCase().includes(searchTerm.toLowerCase())
+        // const matchesCategory = categoryFilter === "all" || customer.category.toLowerCase() === categoryFilter.toLowerCase()
+        return matchesSearch
+    })
+
+    const totalPages = Math.ceil(filteredCustomer.length / itemsPerPage);
+    const paginatedCustomer = filteredCustomer.slice(
+        (currentPage - 1) * itemsPerPage,
+        currentPage * itemsPerPage
+    );
     return (
         <div className="p-6 max-w-7xl mx-auto">
             <div className="flex justify-between items-center mb-6">
                 <h1 className="text-3xl font-bold">Manajemen Pelanggan</h1>
-                <Button>
-                    <Plus className="h-4 w-4 mr-2"/>
-                    Tambah Pelanggan
-                </Button>
+                <ModalTambahCustomer/>
             </div>
 
             {/* Age Verification System */ }
@@ -56,15 +90,17 @@ export function CustomersPage() {
                             <div className="space-y-2">
                                 <div className="flex justify-between">
                                     <span>Total pelanggan terverifikasi:</span>
-                                    <span className="font-medium">234</span>
+                                    <span className="font-medium">{ customers.length }</span>
                                 </div>
                                 <div className="flex justify-between">
                                     <span>Verifikasi ditolak bulan ini:</span>
-                                    <span className="font-medium text-red-600">3</span>
+                                    <span
+                                        className="font-medium text-red-600">{ customers.filter(item => item.status === 'rejected').length }</span>
                                 </div>
                                 <div className="flex justify-between">
                                     <span>Rata-rata umur pelanggan:</span>
-                                    <span className="font-medium">26 tahun</span>
+                                    <span
+                                        className="font-medium">{ calculateAverage(customers.map(item => item.age)) } tahun</span>
                                 </div>
                             </div>
                         </div>
@@ -78,7 +114,9 @@ export function CustomersPage() {
                     <CardTitle>Daftar Pelanggan</CardTitle>
                     <div className="flex space-x-2">
                         <Input placeholder="Cari pelanggan..." className="max-w-sm"/>
-                        <Select defaultValue="all">
+                        <Select defaultValue="all"
+                                onValueChange={ (value) => setSelectStatusCustomer(value) }
+                        >
                             <SelectTrigger className="w-40">
                                 <SelectValue placeholder="Status"/>
                             </SelectTrigger>
@@ -89,6 +127,43 @@ export function CustomersPage() {
                                 <SelectItem value="rejected">Ditolak</SelectItem>
                             </SelectContent>
                         </Select>
+                        {/*    */ }
+
+                        <Select value={ String(itemsPerPage) } onValueChange={ (value) => {
+                            setItemsPerPage(Number(value));
+                            setCurrentPage(1); // Reset ke halaman pertama
+                        } }>
+                            <SelectTrigger>
+                                <SelectValue placeholder="Tampil"/>
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="6">6</SelectItem>
+                                <SelectItem value="10">10</SelectItem>
+                                <SelectItem value="15">15</SelectItem>
+                            </SelectContent>
+                        </Select>
+                        {/*    */ }
+                        <Button
+                            variant="outline"
+                            disabled={ currentPage === 1 }
+                            onClick={ () => setCurrentPage((prev) => prev - 1) }
+                        >
+                            <ChevronLeft/>
+                        </Button>
+
+                        {/*just for text*/ }
+                        <Button variant="outline" disabled={ true }>
+                            { currentPage } / { totalPages }
+                        </Button>
+
+                        <Button
+                            variant="outline"
+                            disabled={ currentPage === totalPages }
+                            onClick={ () => setCurrentPage((prev) => prev + 1) }
+                        >
+                            <ChevronRight/>
+
+                        </Button>
                     </div>
                 </CardHeader>
                 <CardContent>
@@ -104,7 +179,8 @@ export function CustomersPage() {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            { exampleCustomerData.map((customer) => (
+                            { paginatedCustomer
+                            .map((customer) => (
                                 <TableRow key={ customer.id }>
                                     <TableCell>{ customer.name }</TableCell>
                                     <TableCell>{ customer.age } tahun</TableCell>
@@ -112,45 +188,29 @@ export function CustomersPage() {
                                         { formatRupiah(customer.totalPurchase) }
                                     </TableCell>
                                     <TableCell>
-                                        <Badge
-                                            variant={ variantStatus({
-                                                default: customer.status === "verified",
-                                                secondary: customer.status === "pending",
-                                                destructive: true,
-                                            }) }
-                                        >
-                                            {
-                                                choose(
-                                                    [ customer.status === 'verified', "Terverifikasi" ],
-                                                    [ customer.status === 'verified', "Terverifikasi" ],
-                                                    [ customer.status === 'pending', "pending" ],
-                                                    [ true, "Ditolak" ]
-                                                )}
-                                            {/*{getStatusLabel(customer.status) }*/}
+                                        <Badge variant={ getStatusVariant(customer.status) }>
+                                            { chooseStatus(customer.status) }
                                         </Badge>
                                     </TableCell>
-                                    <TableCell>{ customer.lastPurchase }</TableCell>
+                                    <TableCell>{ formatDateIndo(customer.lastPurchase) }</TableCell>
                                     <TableCell>
                                         <div className="flex space-x-2">
-                                            { customer.status === "pending" ? (
-                                                <>
-                                                    <Button size="sm" variant="outline">
-                                                        <CheckCircle className="h-3 w-3"/>
-                                                    </Button>
-                                                    <Button size="sm" variant="outline">
-                                                        <XCircle className="h-3 w-3"/>
-                                                    </Button>
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <Button size="sm" variant="outline">
-                                                        <Eye className="h-3 w-3"/>
-                                                    </Button>
-                                                    <Button size="sm" variant="outline">
-                                                        <Edit className="h-3 w-3"/>
-                                                    </Button>
-                                                </>
-                                            ) }
+                                            {/*<Button size="sm" variant="outline">*/ }
+                                            {/*    <CheckCircle className="h-3 w-3"/>*/ }
+                                            {/*</Button>*/ }
+
+                                            <CustomerDetailDialog customer={ customer }/>
+                                            <ModalEditCustomer customer={ customer }/>
+                                            <Button size="sm" variant="outline"
+                                                    onClick={ async () => {
+                                                        if (confirm('Are you Sure to Delete ?')) {
+                                                            toastResponse({ response: await deleteCustomer(customer.id) })
+                                                        }
+                                                    } }
+                                            >
+                                                <XIcon className="h-3 w-3"/>
+                                            </Button>
+
                                         </div>
                                     </TableCell>
                                 </TableRow>
@@ -170,7 +230,7 @@ export function CustomersPage() {
                 </CardHeader>
                 <CardContent>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        { exampleMemberTierData.map((tier) => (
+                        { members.map((tier) => (
                             <div key={ tier.name }>
                                 <h3 className="font-medium mb-2">{ tier.name }</h3>
                                 <p className="text-sm text-muted-foreground mb-2">{ tier.range }</p>
@@ -185,4 +245,209 @@ export function CustomersPage() {
             </Card>
         </div>
     )
+}
+
+export function CustomerDetailDialog({ customer }: { customer: CustomerRelational }) {
+    return (
+        <Dialog>
+            <DialogTrigger asChild>
+                <Button size="sm" variant="outline">
+                    <Eye className="h-3 w-3"/>
+                </Button>
+            </DialogTrigger>
+
+            <DialogContent className="max-w-3xl">
+                <DialogHeader>
+                    <DialogTitle>Customer Detail: { customer.name }</DialogTitle>
+                </DialogHeader>
+
+                <div className="space-y-4">
+                    <section className="grid grid-cols-2 gap-4">
+                        <div><strong>Name:</strong> { customer.name }</div>
+                        <div><strong>Age:</strong> { customer.age }</div>
+                        <div><strong>Status:</strong> { customer.status }</div>
+                        <div><strong>Total Purchase:</strong> { formatRupiah(customer.totalPurchase) }</div>
+                        <div className="col-span-2">
+                            <strong>Last Purchase:</strong> { formatDateIndo(customer.lastPurchase) }
+                        </div>
+                    </section>
+
+                    <section>
+                        <h3 className="text-lg font-semibold mt-4">Sales History</h3>
+                        <ul className="mt-2 space-y-2">
+                            { customer.Sales.map(sale => (
+                                <li key={ sale.id } className="border p-2 rounded shadow-sm">
+                                    <div><strong>Date:</strong> { formatDateIndo(sale.date) }</div>
+                                    <div><strong>Total:</strong> { formatRupiah(sale.total) }</div>
+                                    <div><strong>Items:</strong> { sale.items }</div>
+                                </li>
+                            )) }
+                            { customer.Sales.length === 0 && <p className="text-gray-500 italic">No sales data.</p> }
+                        </ul>
+                    </section>
+
+                    <section>
+                        <h3 className="text-lg font-semibold mt-4">Pre-Orders</h3>
+                        <ul className="mt-2 space-y-2">
+                            { customer.PreOrders.map(po => (
+                                <li key={ po.id } className="border p-2 rounded shadow-sm">
+                                    <div><strong>Product:</strong> { po.product.name }</div>
+                                    <div><strong>Quantity:</strong> { po.quantity }</div>
+                                    <div><strong>Estimated
+                                        Date:</strong> { new Date(po.estimatedDate).toLocaleDateString() }</div>
+                                    <div><strong>Status:</strong> { po.status }</div>
+                                </li>
+                            )) }
+                            { customer.PreOrders.length === 0 &&
+									<p className="text-gray-500 italic">No pre-orders.</p> }
+                        </ul>
+                    </section>
+                </div>
+            </DialogContent>
+        </Dialog>
+    );
+}
+
+export function ModalTambahCustomer() {
+    const [ open, setOpen ] = useState(false)
+    const [ loading, setLoading ] = useState(false)
+
+    const methods = useForm<CustomerModelComplete>({
+        resolver: zodResolver(CustomerModel),
+        defaultValues: {
+            id: 0,
+            name: "",
+            age: 0,
+            totalPurchase: 0,
+            status: "pending",
+            lastPurchase: new Date(),
+        },
+    });
+
+    const onSubmit = methods.handleSubmit(async (data) => {
+        setLoading(true)
+        toastResponse({
+                response: await createCustomer(data),
+                onSuccess: () => {
+                    setOpen(false)
+                    setLoading(false)
+                }
+            }
+        )
+
+    });
+
+    return (<Dialog open={ open } onOpenChange={ setOpen }>
+            <DialogTrigger asChild>
+                <Button>
+                    <Plus className="h-4 w-4 mr-2"/>
+                    Tambah Pelanggan
+                </Button>
+            </DialogTrigger>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Tambah Pelanggan Baru</DialogTitle>
+                </DialogHeader>
+                <FormProvider { ...methods }>
+                    <form onSubmit={ onSubmit } className="grid gap-4">
+                        <InputHook name="name" title="Nama" placeholder="Nama pelanggan"/>
+                        <InputHook name="age" title="Umur" placeholder="0" type="number"/>
+                        <InputHook name="totalPurchase" title="Total Pembelian" placeholder="0" type="number"/>
+                        <InputDateHook name="lastPurchase" title="Tanggal Pembelian Terakhir"
+                        />
+                        <SelectHook
+                            name="status"
+                            label="Status"
+                            placeholder="Pilih status"
+                            options={ [
+                                { label: "Terverifikasi", value: "verified" },
+                                { label: "Pending", value: "pending" },
+                                { label: "Ditolak", value: "banned" },
+                            ] }
+                        />
+                        <DialogFooter>
+                            <Button type="submit"
+                                    disabled={ loading }
+                            >{ loading ? 'Loading...' : "Simpan" }
+                            </Button>
+                        </DialogFooter>
+                    </form>
+                </FormProvider>
+            </DialogContent>
+        </Dialog>
+    );
+}
+
+export function ModalEditCustomer({ customer }: { customer: CustomerModelComplete }) {
+    const [ open, setOpen ] = useState(false)
+    const [ loading, setLoading ] = useState(false)
+
+    const methods = useForm<CustomerModelComplete>({
+        resolver: zodResolver(CustomerModel),
+        defaultValues: customer
+    });
+
+    const onSubmit = methods.handleSubmit(async (data) => {
+        setLoading(true)
+        toastResponse({
+                response: await updateCustomer(data),
+                onSuccess: () => {
+                    setOpen(false)
+                    setLoading(false)
+                }
+            }
+        )
+    });
+
+    return (<Dialog open={ open } onOpenChange={ setOpen }>
+            <DialogTrigger asChild>
+                <Button size="sm" variant="outline">
+                    <Edit className="h-3 w-3"/>
+                </Button>
+            </DialogTrigger>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Tambah Pelanggan Baru</DialogTitle>
+                </DialogHeader>
+                <FormProvider { ...methods }>
+                    <form onSubmit={ onSubmit } className="grid gap-4">
+                        <InputHook name="name" title="Nama" placeholder="Nama pelanggan"/>
+                        <InputHook name="age" title="Umur" placeholder="0" type="number"/>
+                        <InputHook name="totalPurchase" title="Total Pembelian" placeholder="0" type="number"/>
+                        <InputDateHook name="lastPurchase" title="Tanggal Pembelian Terakhir"
+                        />
+                        <SelectHook
+                            name="status"
+                            label="Status"
+                            placeholder="Pilih status"
+                            options={ [
+                                { label: "Terverifikasi", value: "verified" },
+                                { label: "Pending", value: "pending" },
+                                { label: "Ditolak", value: "rejected" },
+                            ] }
+                        />
+                        <DialogFooter>
+                            <Button type="submit"
+                                    disabled={ loading }
+                            >{ loading ? 'Loading...' : "Simpan" }
+                            </Button>
+                            {/*<Button*/ }
+                            {/*    type="button"*/ }
+                            {/*    disabled={ loading }*/ }
+                            {/*    onClick={ async () => {*/ }
+                            {/*        if (confirm('Are you Sure to Delete ?')) {*/ }
+                            {/*            toastResponse({ response: await deleteCustomer(customer.id) })*/ }
+                            {/*        }*/ }
+                            {/*    } }*/ }
+                            {/*>*/ }
+                            {/*    { loading ? 'Loading...' : "Delete" }*/ }
+                            {/*</Button>*/ }
+
+
+                        </DialogFooter>
+                    </form>
+                </FormProvider>
+            </DialogContent>
+        </Dialog>
+    );
 }
