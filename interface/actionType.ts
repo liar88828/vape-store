@@ -12,3 +12,10 @@ export type LowStockProducts = { stock: number, minStock: number, id: number };
 export type CartItem = Product & {
     quantity: number
 }
+
+export type ContextPage = {
+    params: Promise<{ slug: string }>
+    searchParams: Promise<{ range: string }>
+}
+
+export type RangeStats = 'today' | "week" | "month" | "year" 

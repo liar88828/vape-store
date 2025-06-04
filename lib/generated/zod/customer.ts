@@ -5,7 +5,7 @@ export const CustomerModel = z.object({
     id: z.number().int(),
     name: z.string().min(1),
     age: z.number().int().max(80),
-    totalPurchase: z.number().int(),
+    totalPurchase: z.number().int().min(1),
     status: z.string().min(1),
     lastPurchase: z.date(),
 })

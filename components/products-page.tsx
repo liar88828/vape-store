@@ -18,8 +18,8 @@ import {
     DialogTitle,
     DialogTrigger
 } from "@/components/ui/dialog"
-import { Eye, Pencil, Plus, Trash2 } from "lucide-react"
-import { choose, toastResponse, variantStatus } from "@/lib/my-utils";
+import { Eye, Pencil, Plus, Trash2, XIcon } from "lucide-react"
+import { choose, formatRupiah, getValueLabel, toastResponse, truncateText, variantStatus } from "@/lib/my-utils";
 import { Product } from "@/lib/data";
 import { InputHook, SelectHook, TextareaHook } from "@/components/form-hook";
 import { FormProvider, useForm } from "react-hook-form";
@@ -39,6 +39,14 @@ export function ProductsPage({ products }: ProductsPageProps) {
     const [ nicotineFilter, setNicotineFilter ] = useState("all")
     const [ deviceTypeFilter, setDeviceTypeFilter ] = useState("all")
     const [ stockFilter, setStockFilter ] = useState("all")
+
+    const onReset = () => {
+        setSearchTerm("")
+        setNicotineFilter("all")
+        setCategoryFilter("all")
+        setDeviceTypeFilter("all")
+        setStockFilter("all")
+    }
 
     const filteredProducts = products.filter((product) => {
         const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -76,8 +84,8 @@ export function ProductsPage({ products }: ProductsPageProps) {
 
                 <CardContent>
 
-                    <div className="flex items-end gap-5 flex-row flex-wrap md:flex-nowrap">
-                        <div className="w-full">
+                    <div className="flex items-end gap-2 flex-row flex-wrap md:flex-nowrap lg:justify-between">
+                        <div className="w-full md:max-w-lg">
                             <Label>Search</Label>
                             <Input
                                 placeholder="Cari produk..."
@@ -86,10 +94,12 @@ export function ProductsPage({ products }: ProductsPageProps) {
                                 onChange={ (e) => setSearchTerm(e.target.value) }
                             />
                         </div>
-                        <div className="sm:flex-nowrap flex gap-5  w-full md:w-fit md:justify-end flex-wrap  ">
+                        <div className="sm:flex-nowrap flex gap-2  w-full md:w-fit md:justify-end flex-wrap  ">
                             <div>
                                 <Label>Kategori</Label>
-                                <Select value={ categoryFilter } onValueChange={ setCategoryFilter }>
+                                <Select
+
+                                    value={ categoryFilter } onValueChange={ setCategoryFilter }>
                                     <SelectTrigger>
                                         <SelectValue placeholder="Semua kategori"/>
                                     </SelectTrigger>
@@ -146,6 +156,10 @@ export function ProductsPage({ products }: ProductsPageProps) {
                                     </SelectContent>
                                 </Select>
                             </div>
+                            <div>
+                                <Label>Reset</Label>
+                                <Button onClick={ onReset }> <XIcon/> </Button>
+                            </div>
                         </div>
                     </div>
                 </CardContent>
@@ -165,25 +179,34 @@ export function ProductsPage({ products }: ProductsPageProps) {
                         </TableHeader>
                         <TableBody>
                             { filteredProducts.map((product) => (
-                                <TableRow key={ product.id }>
+                                <TableRow
+                                    key={ product.id }
+                                    // className={twMerge(
+                                    //     clsx(
+                                    //         product.stock === 0 && "bg-red-50",
+                                    //         product.stock > 0 && product.stock <= product.minStock && "bg-yellow-100/20",
+                                    //         product.stock > product.minStock && "bg-green-50"
+                                    //     )
+                                    // )}
+                                >
                                     <TableCell>
                                         <div className="flex items-center space-x-3">
                                             <picture>
                                                 <img
-                                                    src={ product.image || "/placeholder.svg" }
+                                                    src={ product.image }
                                                     alt={ product.name }
-                                                    className="w-10 h-10 rounded object-cover"
+                                                    className="min-w-10 h-10 rounded object-cover"
                                                 />
                                             </picture>
                                             <div>
                                                 <p className="font-medium">{ product.name }</p>
-                                                <p className="text-sm text-muted-foreground">{ product.description }</p>
+                                                <p className="text-sm text-muted-foreground">{ truncateText(product.description, 10) }</p>
                                             </div>
                                         </div>
                                     </TableCell>
                                     <TableCell>{ product.category }</TableCell>
-                                    <TableCell>Rp { product.price.toLocaleString() }</TableCell>
-                                    <TableCell>{ product.stock }</TableCell>
+                                    <TableCell>{ formatRupiah(product.price) }</TableCell>
+                                    <TableCell>{ getValueLabel(product.stock) }</TableCell>
                                     <TableCell>
                                         <Badge
                                             variant={
@@ -206,15 +229,7 @@ export function ProductsPage({ products }: ProductsPageProps) {
                                         <div className="flex space-x-2">
                                             <ProductDetailDialog product={ product }/>
                                             <ModalProductUpdate product={ product }/>
-                                            <Button size="sm" variant="outline"
-                                                    onClick={ async () => {
-                                                        if (confirm('Are you Sure to Delete ?')) {
-                                                            toastResponse({ response: await deleteProduct(product.id) })
-                                                        }
-                                                    } }
-                                            >
-                                                <Trash2 className="h-3 w-3"/>
-                                            </Button>
+
                                         </div>
                                     </TableCell>
                                 </TableRow>
@@ -235,15 +250,15 @@ export function ModalProductTambah() {
         defaultValues: {
             id: 0,
             name: "",
-            category: "",
+            category: "device",
             price: 0,
             stock: 0,
-            minStock: 0,
+            minStock: 5,
             image: "https://picsum.photos/200/300",
-            description: "",
-            nicotineLevel: null,
-            flavor: null,
-            type: "",
+            description: "-",
+            nicotineLevel: '0mg',
+            flavor: '-',
+            type: "Pod System",
         }
     });
 
@@ -257,8 +272,8 @@ export function ModalProductTambah() {
             toast("You submitted the following values", {
                 description: (
                     <pre className="mt-2 w-[320px] rounded-md bg-neutral-950 p-4">
-                  <code className="text-white">{ JSON.stringify(data, null, 2) }</code>
-                </pre>
+                        <code className="text-white">{ JSON.stringify(data, null, 2) }</code>
+                    </pre>
                 )
             })
         }
@@ -313,7 +328,18 @@ export function ModalProductTambah() {
                             />
 
                             <InputHook name="flavor" title="Rasa (untuk liquid)" placeholder="Rasa liquid"/>
-                            <InputHook name="type" title="Tipe Produk" placeholder="Tipe produk"/>
+
+                            <SelectHook
+                                name="type"
+                                label="Tipe Device"
+                                placeholder="Tipe Device"
+                                options={ [
+                                    { label: "Pod System", value: "Pod System" },
+                                    { label: "Mod", value: "Mod" },
+                                    { label: "Disposable", value: "Disposable" },
+                                ] }
+                            />
+                            {/* <InputHook name="type" title="Tipe Produk" placeholder="Tipe produk" /> */ }
 
 
                         </div>
@@ -382,12 +408,27 @@ export function ProductDetailDialog({ product }: { product: Product }) {
                         <p className="text-sm text-muted-foreground whitespace-pre-wrap">{ product.description }</p>
                     </div>
                 </div>
+                <div className="flex items-end gap-2 justify-end">
 
-                <DialogClose asChild>
-                    <Button variant="default" className="mt-6 w-full sm:w-auto">
-                        Tutup
-                    </Button>
-                </DialogClose>
+                    <DialogClose asChild>
+                        <Button variant="outline"
+                                className="min-w-24"
+                                onClick={ async () => {
+                                    if (confirm('Are you Sure to Delete ?')) {
+                                        toastResponse({ response: await deleteProduct(product.id) })
+                                    }
+                                } }
+                        >
+                            Hapus <Trash2 className="h-3 w-3"/>
+                        </Button>
+                    </DialogClose>
+                    <DialogClose asChild>
+                        <Button variant="default" className="min-w-24">
+                            Tutup
+                        </Button>
+                    </DialogClose>
+                </div>
+
             </DialogContent>
         </Dialog>
     );
@@ -410,8 +451,8 @@ export function ModalProductUpdate({ product }: { product: ProductModelType }) {
             toast.error(response.message, {
                 description: (
                     <pre className="mt-2 w-[320px] rounded-md bg-neutral-950 p-4">
-            <code className="text-white">{ JSON.stringify(data, null, 2) }</code>
-          </pre>
+                        <code className="text-white">{ JSON.stringify(data, null, 2) }</code>
+                    </pre>
                 ),
             });
         }

@@ -22,21 +22,25 @@ export default async function RootLayout(
     { children }:
     Readonly<{ children: React.ReactNode }>
 ) {
-
     const cookieStore = await cookies()
     const defaultOpen = cookieStore.get("sidebar_state")?.value === "true"
     return (
 
         <html lang="id" suppressHydrationWarning>
         <body className={ inter.className }>
-        <ThemeProvider attribute="class" defaultTheme="light">
+        <ThemeProvider
+            attribute="class"
+            defaultTheme="dark"
+            // enableSystem
+            // disableTransitionOnChange
+        >
             <SidebarProvider defaultOpen={ defaultOpen }>
                 <AppSidebar lowStockProducts={ await getProductLowStock() }
                             totalTransaction={ await getTransactionCountToday() }
                             totalSellToday={ await getTotalSoldToday() }
                 />
                 <SidebarInset>
-                    <main className="flex-1 overflow-y-auto bg-gray-50">
+                    <main className="flex-1 overflow-y-auto ">
                         <HeaderComponent/>
                         { children }
                     </main>

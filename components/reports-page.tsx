@@ -1,11 +1,11 @@
 "use client"
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { BarChart3, Eye, Gift, Percent, ReceiptText } from "lucide-react"
+import { BarChart3, Eye, Gift, Percent, ReceiptText, TrendingDown, TrendingUp } from "lucide-react"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import {
@@ -13,27 +13,80 @@ import {
     DialogClose,
     DialogContent,
     DialogDescription,
+    DialogFooter,
     DialogHeader,
     DialogTitle,
     DialogTrigger,
 } from "@/components/ui/dialog";
-import { formatDateIndo, formatRupiah } from "@/lib/my-utils";
-import { SalesDataModal } from "@/lib/data";
-import { SaleCustomers } from "@/action/sale-action";
+import { formatDateIndo, formatRupiah, formatRupiahShort } from "@/lib/my-utils";
+import { ChartData, DashboardStats, SaleCustomers } from "@/action/sale-action";
+import { Bar, BarChart, CartesianGrid, XAxis } from "recharts"
+import { ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent, } from "@/components/ui/chart"
+import { twMerge } from "tailwind-merge"
+import clsx from "clsx"
+import { Invoice } from "./invoice"
+import { useRef, useState } from "react"
+import { useReactToPrint } from "react-to-print";
+import { useRouter } from "next/navigation"
+import { RangeStats } from "@/interface/actionType"
+
+export const description = "A bar chart"
+
+// const chartData = [
+//     { month: "January", desktop: 186 },
+//     { month: "February", desktop: 305 },
+//     { month: "March", desktop: 237 },
+//     { month: "April", desktop: 73 },
+//     { month: "May", desktop: 209 },
+//     { month: "June", desktop: 214 },
+// ]
+
+const chartConfig = {
+    desktop: {
+        label: "Desktop",
+        color: "var(--chart-1)",
+    },
+} satisfies ChartConfig
 
 interface ReportsPageProps {
+    range: RangeStats,
     sales: SaleCustomers[],
+    chartData: ChartData[]
+    stats: DashboardStats,
+    trending: {
+        changeText: string,
+        isUp: boolean,
+        value: number
+    }
 }
 
-export function ReportsPage({ sales }: ReportsPageProps) {
+export function ReportsPage({ range, sales, chartData, trending, stats }: ReportsPageProps) {
+    const router = useRouter();
+    const [ selectedRange, setSelectedRange ] = useState<RangeStats>(range);
+    const handleSelectChange = (value: RangeStats) => {
+        setSelectedRange(value);
+        const params = new URLSearchParams(window.location.search);
+        params.set("range", value);
+        router.push(`?${ params.toString() }`);
+    };
+
+    const rangeIndo = clsx({
+        'Bulan': range === 'month',
+        'Hari': range === 'today',
+        'Tahun': range === 'year',
+        'Minggu': range === 'week',
+    })
+
+
+
     return (
         <div className="p-6 max-w-7xl mx-auto">
             <div className="flex justify-between items-center mb-6">
                 <h1 className="text-3xl font-bold">Laporan Penjualan</h1>
                 <div className="flex space-x-2">
-                    <Select defaultValue="month">
-                        <SelectTrigger className="w-40">
-                            <SelectValue placeholder="Periode"/>
+                    <Select value={ selectedRange } onValueChange={ handleSelectChange }>
+                        <SelectTrigger>
+                            <SelectValue placeholder="Pilih rentang waktu"/>
                         </SelectTrigger>
                         <SelectContent>
                             <SelectItem value="today">Hari Ini</SelectItem>
@@ -56,8 +109,9 @@ export function ReportsPage({ sales }: ReportsPageProps) {
                         <CardTitle>Total Penjualan</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">Rp 12.450.000</div>
-                        <p className="text-sm text-green-600">+15% dari bulan lalu</p>
+                        <div className="text-2xl font-bold">{ formatRupiahShort(stats.totalSales) }</div>
+                        <p className="text-sm text-green-600">{ stats.salesGrowth.toFixed(2) }%
+                            dari { rangeIndo } lalu</p>
                     </CardContent>
                 </Card>
 
@@ -66,8 +120,9 @@ export function ReportsPage({ sales }: ReportsPageProps) {
                         <CardTitle>Transaksi</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">156</div>
-                        <p className="text-sm text-green-600">+8% dari bulan lalu</p>
+                        <div className="text-2xl font-bold">{ stats.transactions }</div>
+                        <p className="text-sm text-green-600">{ (stats.transactionsGrowth).toFixed(2) }%
+                            dari { rangeIndo } lalu</p>
                     </CardContent>
                 </Card>
 
@@ -76,8 +131,9 @@ export function ReportsPage({ sales }: ReportsPageProps) {
                         <CardTitle>Rata-rata Transaksi</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">Rp 79.800</div>
-                        <p className="text-sm text-green-600">+3% dari bulan lalu</p>
+                        <div className="text-2xl font-bold">{ formatRupiahShort(stats.avgTransaction) }</div>
+                        <p className="text-sm text-green-600">+{ stats.avgTransactionGrowth.toFixed(2) }%
+                            dari { rangeIndo } lalu</p>
                     </CardContent>
                 </Card>
 
@@ -86,8 +142,8 @@ export function ReportsPage({ sales }: ReportsPageProps) {
                         <CardTitle>Produk Terlaris</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <div className="text-lg font-bold">Salt Nic Liquid</div>
-                        <p className="text-sm text-muted-foreground">45 unit terjual</p>
+                        <div className="text-lg font-bold">{ stats.topProduct.product?.name }</div>
+                        <p className="text-sm text-muted-foreground">{ stats.topProduct.unitsSold } unit terjual</p>
                     </CardContent>
                 </Card>
             </div>
@@ -95,13 +151,47 @@ export function ReportsPage({ sales }: ReportsPageProps) {
             {/* Sales Chart Placeholder */ }
             <Card className="mb-6">
                 <CardHeader>
-                    <CardTitle>Grafik Penjualan Bulanan</CardTitle>
+                    <CardTitle className="capitalize">Grafik Penjualan { range }</CardTitle>
+
+                    <CardDescription>
+                        { `${ chartData[0].name } to ${ chartData[chartData.length - 1].name } ${ new Date().getFullYear() }` }
+                    </CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <div className="h-64 bg-gray-100 rounded flex items-center justify-center">
-                        <p className="text-muted-foreground">Grafik penjualan akan ditampilkan di sini</p>
-                    </div>
+                    <ChartContainer config={ chartConfig }>
+                        <BarChart accessibilityLayer data={ chartData }>
+                            <CartesianGrid vertical={ false }/>
+                            <XAxis
+                                dataKey="name"
+                                tickLine={ false }
+                                tickMargin={ 10 }
+                                axisLine={ false }
+                                tickFormatter={ (value) => value.slice(0, 3) }
+                            />
+                            <ChartTooltip
+                                cursor={ false }
+                                content={ <ChartTooltipContent hideLabel/> }
+                            />
+                            <Bar dataKey="desktop"
+                                 fill="var(--color-desktop)"
+                                 radius={ 8 }/>
+                        </BarChart>
+                    </ChartContainer>
+
                 </CardContent>
+                <CardFooter className="flex-col items-start gap-2 text-sm">
+                    <div className={
+                        twMerge("flex gap-2 leading-none font-medium ",
+                            clsx(trending.isUp ? 'text-green-600' : 'text-red-600')
+                        ) }>
+                        { trending.changeText } { trending.isUp
+                        ? <TrendingUp className="h-4 w-4 "/>
+                        : <TrendingDown className="h-4 w-4 "/> }
+                    </div>
+                    <div className="text-muted-foreground leading-none">
+                        Showing total visitors for the last { chartData.length } { rangeIndo }
+                    </div>
+                </CardFooter>
             </Card>
 
             {/* Detailed Sales */ }
@@ -125,7 +215,10 @@ export function ReportsPage({ sales }: ReportsPageProps) {
                         <TableBody>
                             { sales.map((sale, index) => (
                                 <TableRow key={ index }>
-                                    <TableCell>{ formatDateIndo(sale.date) }</TableCell>
+                                    <TableCell>{ formatDateIndo(
+                                        sale.date,
+                                        range === 'today' ? 'time' : 'long') }
+                                    </TableCell>
                                     <TableCell>{ sale.customer.name }</TableCell>
                                     <TableCell>{ sale.items }</TableCell>
                                     <TableCell>{ formatRupiah(sale.total) }</TableCell>
@@ -135,7 +228,7 @@ export function ReportsPage({ sales }: ReportsPageProps) {
                                     </TableCell>
                                     <TableCell className={ 'space-x-2' }>
                                         <ModalSalesDetail sale={ sale }/>
-                                        {/*<ModalInvoice data={ customers }/>*/ }
+                                        <ModalInvoice sale={ sale }/>
                                     </TableCell>
 
                                 </TableRow>
@@ -253,7 +346,10 @@ export function ModalSalesDetail({ sale }: { sale: SaleCustomers }) {
 
 }
 
-export function ModalInvoice({ data }: { data: SalesDataModal }) {
+export function ModalInvoice({ sale }: { sale: SaleCustomers }) {
+    const contentRef = useRef<HTMLDivElement>(null);
+    const reactToPrintFn = useReactToPrint({ contentRef });
+
     return (
         <Dialog>
             <DialogTrigger asChild>
@@ -261,35 +357,31 @@ export function ModalInvoice({ data }: { data: SalesDataModal }) {
                     <ReceiptText className="h-3 w-3"/>
                 </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-md">
+            {/* overflow-scroll  */ }
+            <DialogContent className="min-w-4xl mx-auto  ">
                 <DialogHeader>
                     <DialogTitle>Invoice</DialogTitle>
                     <p className="text-sm text-muted-foreground">
-                        Transaksi pada { data.date } oleh { data.customer }
+                        Transaksi pada { formatDateIndo(sale.date) } oleh { sale.customer.name }
                     </p>
                 </DialogHeader>
-
-                <div className="mt-4 space-y-2 text-sm">
-                    <div className="font-medium">Daftar Produk:</div>
-                    <ul className="space-y-1">
-                        { data.products.map((item, index) => (
-                            <li key={ index } className="flex justify-between">
-                                <span>{ item.name } × { item.quantity }</span>
-                                <span>{ formatRupiah(item.price * item.quantity) }</span>
-                            </li>
-                        )) }
-                    </ul>
-                    <div className="flex justify-between font-semibold pt-2 border-t">
-                        <span>Total</span>
-                        <span>{ formatRupiah(data.total) }</span>
-                    </div>
+                <div ref={ contentRef }>
+                    <Invoice invoiceData={ sale }/>
                 </div>
 
-                <DialogClose asChild>
-                    <Button variant="outline" className="mt-4">Tutup</Button>
-                </DialogClose>
+                <DialogFooter>
+                    <DialogClose asChild>
+                        <Button onClick={ reactToPrintFn }>Print</Button>
+                    </DialogClose>
+                    <DialogClose asChild>
+                        <Button variant="outline">Tutup</Button>
+                    </DialogClose>
+                </DialogFooter>
             </DialogContent>
         </Dialog>
     );
 }
+
+
+
 

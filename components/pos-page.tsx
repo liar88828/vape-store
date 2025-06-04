@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
-import { ChevronLeft, ChevronRight, MinusIcon, Plus, ShoppingCart, Trash2 } from "lucide-react"
+import { ChevronLeft, ChevronRight, MinusIcon, Plus, PlusIcon, ShoppingCart, Trash2 } from "lucide-react"
 import { Customer, Product } from "@prisma/client";
 import { chooseStatus, formatRupiah, getStatusVariant, toastResponse } from "@/lib/my-utils";
 import { CartItem } from "@/interface/actionType";
@@ -36,6 +36,7 @@ export function POSPage({ products, customers }: { customers: Customer[], produc
     const [ currentPage, setCurrentPage ] = useState(1);
     const [ itemsPerPage, setItemsPerPage ] = useState(6);
     const [ loading, setLoading ] = useState(false)
+
     const filteredProducts = products.filter((product) => {
         const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase())
         const matchesCategory = categoryFilter === "all" || product.category.toLowerCase() === categoryFilter.toLowerCase()
@@ -47,13 +48,16 @@ export function POSPage({ products, customers }: { customers: Customer[], produc
         currentPage * itemsPerPage
     );
     const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
+
     const addToCart = (product: Product) => {
         const existingItem = cartItems.find((item) => item.id === product.id)
         if (existingItem) {
+
             setCartItems(cartItems.map((item) => (item.id === product.id ? {
                 ...item,
                 quantity: item.quantity + 1
             } : item)))
+
         } else {
             setCartItems([ ...cartItems, { ...product, quantity: 1 } ])
         }
@@ -135,32 +139,39 @@ export function POSPage({ products, customers }: { customers: Customer[], produc
                         <CardContent>
 
                             <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-4">
-                                { paginatedProducts.map((product) => (
-                                    <Card key={ product.id }
-                                          className="cursor-pointer hover:shadow-md transition-shadow">
-                                        <CardContent className="p-4">
-                                            <picture>
-                                                <img
-                                                    src={ product.image || "/placeholder.svg" }
-                                                    alt={ product.name }
-                                                    className="w-full h-40 object-cover rounded mb-2"
-                                                />
-                                            </picture>
-                                            <h3 className="font-medium text-sm mb-1">{ product.name }</h3>
-                                            <p className="text-xs text-muted-foreground mb-2">{ product.category }</p>
-                                            <div className="flex justify-between items-center">
+                                { paginatedProducts.map((product) => {
+                                    const cartItem = cartItems.find(item => item.id === product.id);
+                                    const remainingStock = cartItem ? product.stock - cartItem.quantity : product.stock;
+
+                                    return (
+                                        <Card key={ product.id }
+                                              className="cursor-pointer hover:shadow-md transition-shadow">
+                                            <CardContent className="p-4">
+                                                <picture>
+                                                    <img
+                                                        src={ product.image || "/placeholder.svg" }
+                                                        alt={ product.name }
+                                                        className="w-full h-40 object-cover rounded mb-2"
+                                                    />
+                                                </picture>
+                                                <h3 className="font-medium text-sm mb-1">{ product.name }</h3>
+                                                <p className="text-xs text-muted-foreground mb-2">{ product.category }</p>
+                                                <div className="flex justify-between items-center">
                                                     <span
                                                         className="font-bold text-sm">{ formatRupiah(product.price) }</span>
-                                                <Button size="sm"
-                                                        onClick={ () => addToCart(product) }
-                                                        disabled={ product.stock === 0 }>
-                                                    <Plus className="h-3 w-3"/>
-                                                </Button>
-                                            </div>
-                                            <p className="text-xs text-muted-foreground mt-1">Stok: { product.stock }</p>
-                                        </CardContent>
-                                    </Card>
-                                )) }
+                                                    <Button size="sm"
+                                                            onClick={ () => addToCart(product) }
+                                                            disabled={ remainingStock <= 0 }
+
+                                                    >
+                                                        <Plus className="h-3 w-3"/>
+                                                    </Button>
+                                                </div>
+                                                <p className="text-xs text-muted-foreground mt-1">Stok: { remainingStock }</p>
+                                            </CardContent>
+                                        </Card>
+                                    )
+                                }) }
                             </div>
                         </CardContent>
                     </Card>
@@ -178,24 +189,78 @@ export function POSPage({ products, customers }: { customers: Customer[], produc
                                     <p className="text-muted-foreground text-center py-4">Keranjang kosong</p>
                                 ) : (
                                     <>
-                                        { cartItems.map((item) => (
-                                            <div key={ item.id } className="flex justify-between items-center">
-                                                <div className="flex-1">
-                                                    <p className="font-medium text-sm">{ item.name }</p>
-                                                    <p className="text-xs text-muted-foreground">
-                                                        { item.quantity } x Rp { item.price.toLocaleString() }
-                                                    </p>
-                                                </div>
-                                                <div className="flex items-center space-x-2">
+                                        { cartItems.map((product) => {
+
+                                            const incrementItem = (id: number) => {
+                                                setCartItems(prev =>
+                                                    prev.map(item =>
+                                                        item.id === id ? { ...item, quantity: item.quantity + 1 } : item
+                                                    )
+                                                );
+                                            };
+
+                                            const decrementItem = (id: number) => {
+                                                setCartItems(prev =>
+                                                    prev.map(item =>
+                                                        item.id === id && item.quantity > 1
+                                                            ? { ...item, quantity: item.quantity - 1 }
+                                                            : item
+                                                    )
+                                                );
+                                            };
+                                            const getProductStock = (id: number) => {
+                                                return products.find(product => product.id === id)?.stock || 0;
+                                            };
+                                            return (
+                                                <div key={ product.id }
+                                                     className="flex justify-between items-center py-2 border-b">
+                                                    <div className="flex-1">
+                                                        <p className="font-medium text-sm">{ product.name }</p>
+                                                        <p className="text-xs text-muted-foreground">
+                                                            { product.quantity } x { formatRupiah(product.price) }
+                                                        </p>
+                                                    </div>
+
+                                                    <div className="flex items-center space-x-2">
+
+                                                        {/* Total price */ }
                                                         <span
-                                                            className="font-medium">{ formatRupiah(item.price * item.quantity) }</span>
-                                                    <Button size="sm" variant="outline"
-                                                            onClick={ () => removeFromCart(item.id) }>
-                                                        <Trash2 className="h-3 w-3"/>
-                                                    </Button>
+                                                            className="font-medium text-sm">{ formatRupiah(product.price * product.quantity) }</span>
+
+
+                                                        {/* Counter */ }
+                                                        <div className="grid grid-cols-4 gap-2">
+                                                            <Button
+                                                                size={ 'sm' }
+                                                                onClick={ () => decrementItem(product.id) }
+                                                                disabled={ product.quantity <= 1 }
+                                                            >
+                                                                <MinusIcon/>
+                                                            </Button>
+                                                            <Button
+                                                                size={ 'sm' }
+                                                                variant={ 'ghost' }>{ product.quantity }</Button>
+                                                            <Button
+                                                                size={ 'sm' }
+                                                                onClick={ () => incrementItem(product.id) }
+                                                                disabled={ product.quantity >= getProductStock(product.id) }
+                                                            >
+                                                                <PlusIcon/>
+
+                                                            </Button>
+
+                                                            {/* Delete button */ }
+                                                            <Button size="sm" variant="outline"
+                                                                    onClick={ () => removeFromCart(product.id) }>
+                                                                <Trash2 className="h-3 w-3"/>
+                                                            </Button>
+                                                        </div>
+
+
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        )) }
+                                            )
+                                        }) }
 
                                         <div className="border-t pt-4">
                                             <div className="flex justify-between items-center font-bold">
@@ -319,11 +384,11 @@ export function SelectCustomer(
                 </Button>
             </DialogTrigger>
 
-            <DialogContent className="min-w-5xl">
+            <DialogContent className="">
                 <DialogHeader>
                     <DialogTitle>Pilih Pelanggan</DialogTitle>
                 </DialogHeader>
-                <div className="grid grid-cols-2 gap-10">
+                <div className="grid grid-cols-1 gap-10">
 
                     <div className="space-y-4">
 
@@ -368,7 +433,7 @@ export function SelectCustomer(
 
                         <FormProvider { ...methods }>
                             <form onSubmit={ onSubmit } className="grid gap-4">
-                                <InputHook name="name" title="Nama Pelangan Baru" placeholder="Nama pelanggan"/>
+                                <InputHook name="name" title="Tambah Pelangan Baru" placeholder="Nama pelanggan"/>
                                 {/*<InputHook name="age" title="Umur" placeholder="0" type="number"/>*/ }
                                 {/*<InputHook name="totalPurchase" title="Total Pembelian" placeholder="0" type="number"/>*/ }
                                 {/*<InputDateHook name="lastPurchase" title="Tanggal Pembelian Terakhir"*/ }

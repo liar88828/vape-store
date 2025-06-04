@@ -1,14 +1,16 @@
 "use client"
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { AlertTriangle, Clock, DollarSign, Package, ShoppingCart, Star, TrendingUp, Users } from "lucide-react"
 import Link from "next/link"
-import { formatDateIndo, formatRupiah } from "@/lib/my-utils";
+import { formatDateIndo, formatRupiah, formatRupiahShort } from "@/lib/my-utils";
 import { Product } from "@prisma/client";
 import { LastBuyer } from "@/action/sale-action";
+import { cn } from "@/lib/utils"
+import { twMerge } from "tailwind-merge"
 
 interface DashboardPageProps {
     topSelling: Product[],
@@ -33,8 +35,10 @@ export function DashboardPage({
         <div className="p-6 max-w-7xl mx-auto">
             <div className="flex justify-between items-center mb-6">
                 <div>
-                    <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-                    <p className="text-gray-600 mt-1">Selamat datang di VapeStore Management System</p>
+                    <h1 className={ twMerge("text-3xl font-bold text-gray-900", "dark:text-gray-100") }>Dashboard</h1>
+                    <p className={ twMerge("text-gray-600 mt-1", "dark:text-gray-400") }>
+                        Selamat datang di VapeStore Management System
+                    </p>
                 </div>
                 <Button asChild>
                     <Link href="/pos">
@@ -60,66 +64,100 @@ export function DashboardPage({
 
             {/* Stats Cards */ }
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                <Card className="relative overflow-hidden">
+
+                {/* Card 1 - Penjualan Hari Ini */ }
+                <Card
+                    className={ twMerge("relative overflow-hidden", "dark:bg-gray-900 dark:border dark:border-gray-700") }>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Penjualan Hari Ini</CardTitle>
-                        <div className="p-2 bg-green-100 rounded-lg">
-                            <DollarSign className="h-4 w-4 text-green-600"/>
+                        <CardTitle className={ twMerge("text-sm font-medium text-gray-900", "dark:text-gray-100") }>Penjualan
+                            Hari Ini</CardTitle>
+                        <div className={ twMerge("p-2 rounded-lg bg-green-100", "dark:bg-green-900") }>
+                            <DollarSign className={ twMerge("h-4 w-4 text-green-600", "dark:text-green-400") }/>
+                        </div>
+                    </CardHeader>
+                    <CardContent>
+                        <div className={ twMerge("text-2xl font-bold text-gray-900", "dark:text-gray-100") }>
+                            { formatRupiahShort(todayVsYesterdaySales.todayTotal) }
+                        </div>
+                        <div
+                            className={ cn(
+                                "flex items-center mt-2",
+                                {
+                                    "text-green-600 dark:text-green-400": todayVsYesterdaySales.percentChange > 0,
+                                    "text-red-600 dark:text-red-400": todayVsYesterdaySales.percentChange < 0,
+                                }
+                            ) }
+                        >
+                            <TrendingUp className={ twMerge("h-3 w-3 mr-1") }/>
+                            <p className="text-xs font-medium">
+                                { (todayVsYesterdaySales.percentChange).toFixed(1) }% dari kemarin
+                            </p>
+                        </div>
+                    </CardContent>
+                    <div
+                        className={ twMerge("absolute top-0 right-0 w-20 h-20 bg-green-50 rounded-full -mr-10 -mt-10", "dark:bg-green-900/30") }></div>
+                </Card>
+
+                {/* Card 2 - Total Produk */ }
+                <Card
+                    className={ twMerge("relative overflow-hidden", "dark:bg-gray-900 dark:border dark:border-gray-700") }>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className={ twMerge("text-sm font-medium text-gray-900", "dark:text-gray-100") }>Total
+                            Produk</CardTitle>
+                        <div className={ twMerge("p-2 bg-blue-100 rounded-lg", "dark:bg-blue-900") }>
+                            <Package className={ twMerge("h-4 w-4 text-blue-600", "dark:text-blue-400") }/>
                         </div>
                     </CardHeader>
                     <CardContent>
                         <div
-                            className="text-2xl font-bold text-gray-900">{ formatRupiah(todayVsYesterdaySales.todayTotal) }</div>
-                        <div className="flex items-center mt-2">
-                            <TrendingUp className="h-3 w-3 text-green-600 mr-1"/>
-                            <p className="text-xs text-green-600 font-medium">{ todayVsYesterdaySales.percentChange } dari
-                                kemarin</p>
-                        </div>
+                            className={ twMerge("text-2xl font-bold text-gray-900", "dark:text-gray-100") }>{ topSelling.length }</div>
+                        <p className={ twMerge("text-xs text-gray-600 mt-2", "dark:text-gray-400") }>5 kategori
+                            tersedia</p>
                     </CardContent>
-                    <div className="absolute top-0 right-0 w-20 h-20 bg-green-50 rounded-full -mr-10 -mt-10"></div>
+                    <div
+                        className={ twMerge("absolute top-0 right-0 w-20 h-20 bg-blue-50 rounded-full -mr-10 -mt-10", "dark:bg-blue-900/30") }></div>
                 </Card>
 
-                <Card className="relative overflow-hidden">
+                {/* Card 3 - Stok Rendah */ }
+                <Card
+                    className={ twMerge("relative overflow-hidden", "dark:bg-gray-900 dark:border dark:border-gray-700") }>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Total Produk</CardTitle>
-                        <div className="p-2 bg-blue-100 rounded-lg">
-                            <Package className="h-4 w-4 text-blue-600"/>
+                        <CardTitle className={ twMerge("text-sm font-medium text-red-600", "dark:text-red-400") }>Stok
+                            Rendah</CardTitle>
+                        <div className={ twMerge("p-2 bg-red-100 rounded-lg", "dark:bg-red-900") }>
+                            <AlertTriangle className={ twMerge("h-4 w-4 text-red-600", "dark:text-red-400") }/>
                         </div>
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold text-gray-900">{ topSelling.length }</div>
-                        <p className="text-xs text-gray-600 mt-2">5 kategori tersedia</p>
+                        <div
+                            className={ twMerge("text-2xl font-bold text-red-600", "dark:text-red-400") }>{ lowStockProducts.length }</div>
+                        <p className={ twMerge("text-xs text-red-600 mt-2", "dark:text-red-400") }>Perlu reorder
+                            segera</p>
                     </CardContent>
-                    <div className="absolute top-0 right-0 w-20 h-20 bg-blue-50 rounded-full -mr-10 -mt-10"></div>
+                    <div
+                        className={ twMerge("absolute top-0 right-0 w-20 h-20 bg-red-50 rounded-full -mr-10 -mt-10", "dark:bg-red-900/30") }></div>
                 </Card>
 
-                <Card className="relative overflow-hidden">
+                {/* Card 4 - Pre-Order */ }
+                <Card
+                    className={ twMerge("relative overflow-hidden", "dark:bg-gray-900 dark:border dark:border-gray-700") }>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Stok Rendah</CardTitle>
-                        <div className="p-2 bg-red-100 rounded-lg">
-                            <AlertTriangle className="h-4 w-4 text-red-600"/>
+                        <CardTitle
+                            className={ twMerge("text-sm font-medium text-gray-900", "dark:text-gray-100") }>Pre-Order</CardTitle>
+                        <div className={ twMerge("p-2 bg-orange-100 rounded-lg", "dark:bg-orange-900") }>
+                            <Clock className={ twMerge("h-4 w-4 text-orange-600", "dark:text-orange-400") }/>
                         </div>
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold text-red-600">{ lowStockProducts.length }</div>
-                        <p className="text-xs text-red-600 mt-2">Perlu reorder segera</p>
+                        <div
+                            className={ twMerge("text-2xl font-bold text-gray-900", "dark:text-gray-100") }>{ preOrders }</div>
+                        <p className={ twMerge("text-xs text-gray-600 mt-2", "dark:text-gray-400") }>Menunggu
+                            konfirmasi</p>
                     </CardContent>
-                    <div className="absolute top-0 right-0 w-20 h-20 bg-red-50 rounded-full -mr-10 -mt-10"></div>
+                    <div
+                        className={ twMerge("absolute top-0 right-0 w-20 h-20 bg-orange-50 rounded-full -mr-10 -mt-10", "dark:bg-orange-900/30") }></div>
                 </Card>
 
-                <Card className="relative overflow-hidden">
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Pre-Order</CardTitle>
-                        <div className="p-2 bg-orange-100 rounded-lg">
-                            <Clock className="h-4 w-4 text-orange-600"/>
-                        </div>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold text-gray-900">{ preOrders }</div>
-                        <p className="text-xs text-gray-600 mt-2">Menunggu konfirmasi</p>
-                    </CardContent>
-                    <div className="absolute top-0 right-0 w-20 h-20 bg-orange-50 rounded-full -mr-10 -mt-10"></div>
-                </Card>
             </div>
 
             {/* Main Content Grid */ }
@@ -129,7 +167,7 @@ export function DashboardPage({
                     <CardHeader className="flex flex-row items-center justify-between">
                         <div>
                             <CardTitle>Penjualan Terbaru</CardTitle>
-                            <p className="text-sm text-gray-600 mt-1">Transaksi hari ini</p>
+                            <CardDescription className="mt-1"> Transaksi hari ini </CardDescription>
                         </div>
                         <Button variant="outline" size="sm" asChild>
                             <Link href="/reports">Lihat Semua</Link>
@@ -138,23 +176,32 @@ export function DashboardPage({
                     <CardContent>
                         <div className="space-y-4">
                             { lastBuyer.map((sale, index) => (
-                                <div key={ index }
-                                     className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                <div
+                                    key={ index }
+                                    className={ twMerge(
+                                        "flex items-center justify-between p-3 bg-gray-50 rounded-lg",
+                                        "dark:bg-gray-800"
+                                    ) }
+                                >
                                     <div className="flex items-center space-x-3">
                                         <div
-                                            className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                                            <Users className="h-5 w-5 text-blue-600"/>
+                                            className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center dark:bg-blue-900">
+                                            <Users className="h-5 w-5 text-blue-600 dark:text-blue-400"/>
                                         </div>
                                         <div>
-                                            <p className="font-medium text-gray-900">{ sale.name }</p>
-                                            <p className="text-sm text-gray-600">
+                                            <p className={ twMerge("font-medium text-gray-900", "dark:text-gray-100") }>
+                                                { sale.name }
+                                            </p>
+                                            <p className={ twMerge("text-sm text-gray-600", "dark:text-gray-400") }>
                                                 { sale.Sales.length } items • { formatDateIndo(sale.lastPurchase) }
                                             </p>
                                         </div>
                                     </div>
                                     <div className="text-right">
-                                        <p className="font-bold text-gray-900">{ formatRupiah(sale.totalPurchase) }</p>
-                                        <Badge variant="default" className="text-xs">
+                                        <p className={ twMerge("font-bold text-gray-900", "dark:text-gray-100") }>
+                                            { formatRupiah(sale.totalPurchase) }
+                                        </p>
+                                        <Badge variant="default">
                                             Selesai
                                         </Badge>
                                     </div>
@@ -168,7 +215,7 @@ export function DashboardPage({
                 <Card>
                     <CardHeader>
                         <CardTitle>Quick Actions</CardTitle>
-                        <p className="text-sm text-gray-600">Aksi cepat untuk operasional</p>
+                        <CardDescription> Aksi cepat untuk operasional </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-3">
                         <Button className="w-full justify-start" asChild>
@@ -209,7 +256,7 @@ export function DashboardPage({
                                 <AlertTriangle className="h-5 w-5 text-red-500 mr-2"/>
                                 Stok Rendah
                             </CardTitle>
-                            <p className="text-sm text-gray-600 mt-1">Produk yang perlu direstock</p>
+                            <CardDescription className="mt-1">Produk yang perlu direstock</CardDescription>
                         </div>
                         <Button variant="outline" size="sm" asChild>
                             <Link href="/inventory">Kelola</Link>
@@ -219,8 +266,10 @@ export function DashboardPage({
                         <div className="space-y-3">
                             { lowStockProducts.length === 0 ? (
                                 <div className="text-center py-6">
-                                    <Package className="h-12 w-12 text-gray-300 mx-auto mb-3"/>
-                                    <p className="text-gray-500">Semua produk stok aman</p>
+                                    <Package className="h-12 w-12 mx-auto mb-3"/>
+                                    <p className={ twMerge("text-gray-500", "dark:text-gray-400") }>
+                                        Semua produk stok aman
+                                    </p>
                                 </div>
                             ) : (
                                 lowStockProducts.slice(0, 4).map((product) => (
@@ -261,17 +310,33 @@ export function DashboardPage({
                             <Star className="h-5 w-5 text-yellow-500 mr-2"/>
                             Produk Terlaris
                         </CardTitle>
-                        <p className="text-sm text-gray-600 mt-1">Berdasarkan penjualan bulan ini</p>
+                        <CardDescription>Berdasarkan penjualan bulan ini</CardDescription>
                     </CardHeader>
                     <CardContent>
                         <div className="space-y-3">
                             { topSelling.slice(0, 4).map((product, index) => (
-                                <div key={ product.id }
-                                     className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                <div
+                                    key={ product.id }
+                                    className={ twMerge(
+                                        "flex items-center justify-between p-3 bg-gray-50 rounded-lg",
+                                        "dark:bg-gray-800"
+                                    ) }
+                                >
                                     <div className="flex items-center space-x-3">
                                         <div
-                                            className="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center">
-                                            <span className="text-sm font-bold text-yellow-600">#{ index + 1 }</span>
+                                            className={ twMerge(
+                                                "w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center",
+                                                "dark:bg-yellow-900"
+                                            ) }
+                                        >
+                                            <span
+                                                className={ twMerge(
+                                                    "text-sm font-bold text-yellow-600",
+                                                    "dark:text-yellow-400"
+                                                ) }
+                                            >
+                                                #{ index + 1 }
+                                            </span>
                                         </div>
                                         <picture>
                                             <img
@@ -281,13 +346,41 @@ export function DashboardPage({
                                             />
                                         </picture>
                                         <div>
-                                            <p className="font-medium text-gray-900">{ product.name }</p>
-                                            <p className="text-sm text-gray-600">{ product.category }</p>
+                                            <p
+                                                className={ twMerge(
+                                                    "font-medium text-gray-900",
+                                                    "dark:text-gray-100"
+                                                ) }
+                                            >
+                                                { product.name }
+                                            </p>
+                                            <p
+                                                className={ twMerge(
+                                                    "text-sm text-gray-600",
+                                                    "dark:text-gray-400"
+                                                ) }
+                                            >
+                                                { product.category }
+                                            </p>
                                         </div>
                                     </div>
                                     <div className="text-right">
-                                        <p className="font-bold text-gray-900"> 12312 terjual</p>
-                                        <p className="text-sm text-gray-600">Rp { product.price.toLocaleString() }</p>
+                                        <p
+                                            className={ twMerge(
+                                                "font-bold text-gray-900",
+                                                "dark:text-gray-100"
+                                            ) }
+                                        >
+                                            12312 terjual
+                                        </p>
+                                        <p
+                                            className={ twMerge(
+                                                "text-sm text-gray-600",
+                                                "dark:text-gray-400"
+                                            ) }
+                                        >
+                                            Rp { product.price.toLocaleString() }
+                                        </p>
                                     </div>
                                 </div>
                             )) }

@@ -1,42 +1,39 @@
 "use client"
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { AlertTriangle, CheckCircle, MinusIcon, Plus, XIcon } from "lucide-react"
+import { AlertTriangle, MinusIcon, Plus } from "lucide-react"
 import { useState } from "react"
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Customer, Product } from "@prisma/client";
-import {
-    chooseStatus,
-    formatDateIndo,
-    formatRupiah,
-    getStatusVariant,
-    toastResponse,
-    totalProduct
-} from "@/lib/my-utils";
-import { preorderProduct } from "@/action/product-action";
-import { deletePreorderProduct, preOrderProduct, validPreorderProduct } from "@/action/inventory-action";
+import { chooseStatus, formatDateIndo, formatRupiah, getStatusVariant, totalProduct } from "@/lib/my-utils";
+import { PreorderProduct } from "@/action/product-action";
+import { preOrderProduct } from "@/action/inventory-action";
 import { SelectCustomer } from "@/components/pos-page";
+import { Button } from "@/components/ui/button"
+import { DatePicker } from "./form-hook"
+import { PreOrderDialog } from "./invoice-preorder"
 
 interface InventoryPageProps {
     products: Product[],
-    preOrders: preorderProduct[]
+    preOrders: PreorderProduct[]
     lowStockProducts: Product[]
     customers: Customer[]
 }
 
 export function InventoryPage({ products, preOrders, lowStockProducts, customers }: InventoryPageProps) {
-
+    const [ loading, setLoading ] = useState(false)
     return (
         <div className="p-6 max-w-7xl mx-auto">
-            <div className="flex justify-between items-center mb-6">
-                <h1 className="text-3xl font-bold">Manajemen Inventori</h1>
-                <div className="flex space-x-2">
+            <div className="flex justify-between items-center mb-6 ">
+                <div className="">
+                    <h1 className="text-3xl font-bold">Manajemen Inventori</h1>
+                </div>
+                <div className="flex gap-2 flex-col sm:flex-row">
                     <Button variant="outline">
                         <AlertTriangle className="h-4 w-4 mr-2"/>
                         Reorder Alert
@@ -159,27 +156,38 @@ export function InventoryPage({ products, preOrders, lowStockProducts, customers
                                             variant={ preOrder.status === "Confirmed" ? "default" : "secondary" }>{ preOrder.status }</Badge>
                                     </TableCell>
                                     <TableCell>
-                                        <div className="flex space-x-2">
-                                            <Button size="sm" variant="outline"
-                                                    onClick={ async () => {
-                                                        if (confirm('Stock Ready??')) {
-                                                            toastResponse({ response: await validPreorderProduct(preOrder.id) })
-                                                        }
-                                                    } }
-                                            >
-                                                <CheckCircle className="h-3 w-3"/>
-                                            </Button>
-                                            <Button size="sm" variant="outline"
+                                        <PreOrderDialog orderData={ preOrder }/>
+                                        {/* <div className="flex space-x-2">
+                                            {preOrder.status
+                                                ? 
+                                                : <>
+                                                    <Button size="sm" disabled={loading} variant="outline"
+                                                        onClick={async () => {
+                                                            setLoading(true)
+                                                            if (confirm('Stock Ready??')) {
+                                                                toastResponse({ response: await validPreorderProduct(preOrder.id) })
+                                                            }
+                                                            setLoading(false)
 
-                                                    onClick={ async () => {
-                                                        if (confirm('Are You Sure to Delete ??')) {
-                                                            toastResponse({ response: await deletePreorderProduct(preOrder.id) })
-                                                        }
-                                                    } }
-                                            >
-                                                <XIcon className="h-3 w-3"/>
-                                            </Button>
-                                        </div>
+                                                        }}
+                                                    >
+                                                        <CheckCircle className="h-3 w-3" />
+                                                    </Button>
+                                                    <Button size="sm" disabled={loading} variant="outline"
+                                                        onClick={async () => {
+                                                            setLoading(true)
+                                                            if (confirm('Are You Sure to Delete ??')) {
+                                                                toastResponse({ response: await deletePreorderProduct(preOrder.id) })
+                                                            }
+                                                            setLoading(false)
+                                                        }}
+                                                    >
+                                                        <XIcon className="h-3 w-3" />
+                                                    </Button>
+                                                </>
+                                            }
+
+                                        </div> */ }
                                     </TableCell>
                                 </TableRow>
                             )) }
@@ -194,9 +202,11 @@ export function InventoryPage({ products, preOrders, lowStockProducts, customers
 function ReStockModal({ product, customers }: { product: Product, customers: Customer[] }) {
     const [ isStockModalOpen, setIsStockModalOpen ] = useState(false)
     const [ stockQty, setStockQty ] = useState("")
+    const [ date, setDate ] = useState<Date>()
+
     const [ productToAddStock, setProductToAddStock ] = useState<Product | null>(null)
     const [ selectedCustomer, setSelectedCustomer ] = useState<Customer | null>(null)
-
+    const [ loading, setLoading ] = useState(false)
     return (
         <Dialog open={ isStockModalOpen } onOpenChange={ setIsStockModalOpen }>
             <DialogTrigger asChild>
@@ -212,7 +222,7 @@ function ReStockModal({ product, customers }: { product: Product, customers: Cus
             </DialogTrigger>
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle>Tambah Stok</DialogTitle>
+                    <DialogTitle>Tambah Stok xxx</DialogTitle>
                 </DialogHeader>
 
                 { productToAddStock && (
@@ -227,6 +237,12 @@ function ReStockModal({ product, customers }: { product: Product, customers: Cus
                                 onChange={ (e) => setStockQty(e.target.value) }
                             />
                         </div>
+
+                        <div>
+                            <Label>Tanggal Estimasi</Label>
+                            <DatePicker date={ date } setDate={ setDate }/>
+                        </div>
+
                     </div>
                 ) }
                 <div className="">
@@ -250,23 +266,29 @@ function ReStockModal({ product, customers }: { product: Product, customers: Cus
                         </div>
                         : <SelectCustomer
                             customers={ customers }
-                            onSelectAction={ (customer) => setSelectedCustomer(customer) }
+                            onSelectAction={ (customer) => setSelectedCustomer(customer)
+                            }
                         /> }
                 </div>
                 <DialogFooter>
                     <Button
                         onClick={ async () => {
+                            setLoading(true)
                             const amount = parseInt(stockQty)
-                            if (!isNaN(amount) && productToAddStock) {
+                            if (!isNaN(amount) && productToAddStock && date) {
                                 productToAddStock.stock += amount
                                 alert(`Stok ${ productToAddStock.name } ditambah ${ amount }`)
                                 setIsStockModalOpen(false)
                                 setStockQty("")
                                 setProductToAddStock(null)
-                                await preOrderProduct({ quantity: amount }, productToAddStock, selectedCustomer)
+                                setDate(new Date())
+                                await preOrderProduct({ quantity: amount, date }, productToAddStock, selectedCustomer)
+                                setLoading(false)
                             }
+                            setLoading(false)
+
                         } }
-                        disabled={ !stockQty }
+                        disabled={ !stockQty || !date || loading }
                     >
                         Simpan
                     </Button>
@@ -277,6 +299,7 @@ function ReStockModal({ product, customers }: { product: Product, customers: Cus
     );
 }
 
+// atas
 export default function StockModal({ products }: { products: Product[] }) {
     const [ isModalOpen, setIsModalOpen ] = useState(false)
     const [ stockAmount, setStockAmount ] = useState("")

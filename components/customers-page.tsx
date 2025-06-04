@@ -7,9 +7,9 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Progress } from "@/components/ui/progress"
-import { ChevronLeft, ChevronRight, Edit, Eye, Plus, Star, Users, XIcon } from "lucide-react"
+import { ChevronLeft, ChevronRight, Edit, Eye, Plus, SearchIcon, Star, Users, XIcon } from "lucide-react"
 import { MemberTier } from "@/lib/data";
 import {
     calculateAverage,
@@ -36,21 +36,24 @@ interface CustomersPageProps {
 export function CustomersPage({ customers, members }: CustomersPageProps) {
     const [ selectStatusCustomer, setSelectStatusCustomer ] = useState('all')
     const [ searchTerm, setSearchTerm ] = useState("")
-    const [ categoryFilter, setCategoryFilter ] = useState("all")
     const [ currentPage, setCurrentPage ] = useState(1);
     const [ itemsPerPage, setItemsPerPage ] = useState(6);
 
-    const filteredCustomer = customers.filter((customer) => {
-        const matchesSearch = customer.name.toLowerCase().includes(searchTerm.toLowerCase())
-        // const matchesCategory = categoryFilter === "all" || customer.category.toLowerCase() === categoryFilter.toLowerCase()
-        return matchesSearch
-    })
+    const filteredCustomer = customers.filter((customer: CustomerRelational) => {
+        const matchesSearch = customer.name.toLowerCase().includes(searchTerm.toLowerCase());
 
+        const matchesCategory =
+            selectStatusCustomer === "all" ||
+            customer.status === selectStatusCustomer;
+
+        return matchesSearch && matchesCategory;
+    });
     const totalPages = Math.ceil(filteredCustomer.length / itemsPerPage);
     const paginatedCustomer = filteredCustomer.slice(
         (currentPage - 1) * itemsPerPage,
         currentPage * itemsPerPage
     );
+
     return (
         <div className="p-6 max-w-7xl mx-auto">
             <div className="flex justify-between items-center mb-6">
@@ -108,71 +111,44 @@ export function CustomersPage({ customers, members }: CustomersPageProps) {
                 </CardContent>
             </Card>
 
+
             {/* Customer List */ }
-            <Card className="mb-6">
+            {/* min-w-2xl m-auto */ }
+            <Card className="mb-6 ">
                 <CardHeader>
                     <CardTitle>Daftar Pelanggan</CardTitle>
-                    <div className="flex space-x-2">
-                        <Input placeholder="Cari pelanggan..." className="max-w-sm"/>
-                        <Select defaultValue="all"
-                                onValueChange={ (value) => setSelectStatusCustomer(value) }
-                        >
+                    <div className="flex justify-between">
+                        <div className="flex w-full max-w-sm items-center gap-2">
+                            <Input value={ searchTerm }
+                                   onChange={ (e) => setSearchTerm(e.target.value) }
+                                   placeholder="Cari pelanggan..."
+                                   className="max-w-sm"/>
+                            <Button type="button" variant="outline">
+                                <SearchIcon/>
+                            </Button>
+                        </div>
+
+                        <Select defaultValue="all" onValueChange={ setSelectStatusCustomer }>
                             <SelectTrigger className="w-40">
                                 <SelectValue placeholder="Status"/>
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="all">Semua</SelectItem>
-                                <SelectItem value="verified">Terverifikasi</SelectItem>
+                                <SelectItem value="verified">Valid</SelectItem>
                                 <SelectItem value="pending">Pending</SelectItem>
                                 <SelectItem value="rejected">Ditolak</SelectItem>
                             </SelectContent>
                         </Select>
-                        {/*    */ }
 
-                        <Select value={ String(itemsPerPage) } onValueChange={ (value) => {
-                            setItemsPerPage(Number(value));
-                            setCurrentPage(1); // Reset ke halaman pertama
-                        } }>
-                            <SelectTrigger>
-                                <SelectValue placeholder="Tampil"/>
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="6">6</SelectItem>
-                                <SelectItem value="10">10</SelectItem>
-                                <SelectItem value="15">15</SelectItem>
-                            </SelectContent>
-                        </Select>
-                        {/*    */ }
-                        <Button
-                            variant="outline"
-                            disabled={ currentPage === 1 }
-                            onClick={ () => setCurrentPage((prev) => prev - 1) }
-                        >
-                            <ChevronLeft/>
-                        </Button>
-
-                        {/*just for text*/ }
-                        <Button variant="outline" disabled={ true }>
-                            { currentPage } / { totalPages }
-                        </Button>
-
-                        <Button
-                            variant="outline"
-                            disabled={ currentPage === totalPages }
-                            onClick={ () => setCurrentPage((prev) => prev + 1) }
-                        >
-                            <ChevronRight/>
-
-                        </Button>
                     </div>
                 </CardHeader>
                 <CardContent>
-                    <Table>
+                    <Table className="">
                         <TableHeader>
                             <TableRow>
-                                <TableHead>Nama</TableHead>
+                                <TableHead className="min-w-28">Nama</TableHead>
                                 <TableHead>Umur</TableHead>
-                                <TableHead>Total Pembelian</TableHead>
+                                <TableHead className="min-w-32">Total Pembelian</TableHead>
                                 <TableHead>Status Verifikasi</TableHead>
                                 <TableHead>Terakhir Belanja</TableHead>
                                 <TableHead>Aksi</TableHead>
@@ -183,7 +159,10 @@ export function CustomersPage({ customers, members }: CustomersPageProps) {
                             .map((customer) => (
                                 <TableRow key={ customer.id }>
                                     <TableCell>{ customer.name }</TableCell>
-                                    <TableCell>{ customer.age } tahun</TableCell>
+                                    <TableCell>{ customer.age }
+                                        th
+                                        {/* tahun */ }
+                                    </TableCell>
                                     <TableCell>
                                         { formatRupiah(customer.totalPurchase) }
                                     </TableCell>
@@ -216,6 +195,49 @@ export function CustomersPage({ customers, members }: CustomersPageProps) {
                                 </TableRow>
                             )) }
                         </TableBody>
+
+                        <TableFooter>
+                            <TableRow>
+                                <TableCell colSpan={ 4 }> </TableCell>
+                                <TableCell>
+                                    <Select value={ String(itemsPerPage) } onValueChange={ (value) => {
+                                        setItemsPerPage(Number(value));
+                                        setCurrentPage(1); // Reset ke halaman pertama
+                                    } }>
+                                        <SelectTrigger className="w-full">
+                                            <SelectValue placeholder="Tampil"/>
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="6">6</SelectItem>
+                                            <SelectItem value="10">10</SelectItem>
+                                            <SelectItem value="15">15</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </TableCell>
+                                <TableCell
+                                    className="flex items-center gap-1">
+                                    <Button
+                                        variant="outline"
+                                        disabled={ currentPage === 1 }
+                                        onClick={ () => setCurrentPage((prev) => prev - 1) }
+                                    >
+                                        <ChevronLeft/>
+                                    </Button>
+
+                                    <Button variant="outline" disabled={ true }>
+                                        { currentPage } / { totalPages }
+                                    </Button>
+
+                                    <Button
+                                        variant="outline"
+                                        disabled={ currentPage === totalPages }
+                                        onClick={ () => setCurrentPage((prev) => prev + 1) }
+                                    >
+                                        <ChevronRight/>
+                                    </Button>
+                                </TableCell>
+                            </TableRow>
+                        </TableFooter>
                     </Table>
                 </CardContent>
             </Card>
@@ -360,7 +382,7 @@ export function ModalTambahCustomer() {
                             label="Status"
                             placeholder="Pilih status"
                             options={ [
-                                { label: "Terverifikasi", value: "verified" },
+                                { label: "Valid", value: "verified" },
                                 { label: "Pending", value: "pending" },
                                 { label: "Ditolak", value: "banned" },
                             ] }
@@ -421,7 +443,7 @@ export function ModalEditCustomer({ customer }: { customer: CustomerModelComplet
                             label="Status"
                             placeholder="Pilih status"
                             options={ [
-                                { label: "Terverifikasi", value: "verified" },
+                                { label: "Valid", value: "verified" },
                                 { label: "Pending", value: "pending" },
                                 { label: "Ditolak", value: "rejected" },
                             ] }

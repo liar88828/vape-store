@@ -39,9 +39,12 @@ export function formatRupiahShort(amount: number): string {
 }
 export function getStatusLabel(status: string): string {
     switch (status) {
-        case "verified":return "Terverifikasi";
-        case "pending":return "Pending";
-        default:return "Ditolak";
+        case "verified":
+            return "Terverifikasi";
+        case "pending":
+            return "Pending";
+        default:
+            return "Ditolak";
     }
 }
 
@@ -52,18 +55,54 @@ export function choose<T>(...cases: [condition: boolean, result: T][]): T | unde
     return undefined;
 }
 
-export function formatDateIndo(dateStr: Date, format = 'long') {
+export function formatDateIndo(
+    dateStr: Date | string,
+    format: "numeric" | "long" | "full" | "time" | "datetime" = "long"
+): string {
     const date = new Date(dateStr);
 
-    if (format === 'long') {
-        return date.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
-    } else if (format === 'numeric') {
-        const day = String(date.getDate()).padStart(2, '0');
-        const month = String(date.getMonth() + 1).padStart(2, '0'); // zero-based month
-        const year = date.getFullYear();
-        return `${ day }/${ month }/${ year }`;
-    } else {
-        throw new Error('Invalid format type. Use "long" or "numeric".');
+    switch (format) {
+        case "long":
+            return date.toLocaleDateString("id-ID", {
+                day: "numeric",
+                month: "long",
+                year: "numeric",
+            });
+
+        case "numeric":
+            const day = String(date.getDate()).padStart(2, "0");
+            const month = String(date.getMonth() + 1).padStart(2, "0");
+            const year = date.getFullYear();
+            return `${ day }/${ month }/${ year }`;
+
+        case "full":
+            return date.toLocaleDateString("id-ID", {
+                weekday: "long",
+                day: "numeric",
+                month: "long",
+                year: "numeric",
+            });
+
+        case "time":
+            return date.toLocaleTimeString("id-ID", {
+                hour: "2-digit",
+                minute: "2-digit",
+                second: "2-digit",
+            });
+
+        case "datetime":
+            return date.toLocaleString("id-ID", {
+                weekday: "long",
+                day: "numeric",
+                month: "long",
+                year: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
+                second: "2-digit",
+            });
+
+        default:
+            throw new Error('Invalid format type. Use "long", "numeric", "full", "time", or "datetime".');
     }
 }
 
@@ -112,7 +151,7 @@ export function calculateAverage(numbers: number[]) {
 }
 
 export function chooseStatus(status: string): string {
-    if (status === "verified") return "Terverifikasi";
+    if (status === "verified") return "Valid";
     if (status === "pending") return "Pending";
     return "Ditolak";
 }
@@ -126,3 +165,23 @@ export function getStatusVariant(status: string): "default" | "secondary" | "des
 export function totalProduct(products: Product[]) {
     return products.reduce((a, b) => a + (b.price + b.price), 0);
 }
+
+// export function getValueLabel(value: number) {
+//     if (value <= 100) return `${value}`;
+
+//     const power = Math.pow(10, Math.floor(Math.log10(value)));
+//     const rounded = Math.floor(value / power) * power;
+
+//     return `${rounded}+`;
+// }
+
+export function getValueLabel(value: number) {
+    if (value > 100) return `+100`;
+    return value
+}
+
+export function truncateText(text: string, maxLength: number) {
+    return text.length > maxLength ? text.slice(0, maxLength) + '...' : text;
+}
+
+// Usage in component

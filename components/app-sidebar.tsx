@@ -9,6 +9,7 @@ import {
     Bell,
     ChevronDown,
     CreditCard,
+    FlaskConical,
     Gift,
     Home,
     LogOut,
@@ -46,6 +47,7 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { formatRupiahShort } from "@/lib/my-utils";
+import { twMerge } from "tailwind-merge"
 
 export function AppSidebar({ lowStockProducts, totalTransaction, totalSellToday }: {
     lowStockProducts: { stock: number }[],
@@ -72,6 +74,12 @@ export function AppSidebar({ lowStockProducts, totalTransaction, totalSellToday 
       description: "Point of Sale",
       badge: "Live",
     },
+      {
+          title: "Test",
+          icon: FlaskConical,
+          path: "/test",
+          description: "For Test App",
+      },
   ]
 
   const managementItems = [
@@ -122,15 +130,40 @@ export function AppSidebar({ lowStockProducts, totalTransaction, totalSellToday 
   ]
 
   return (
-    <Sidebar className="border-r border-gray-200">
-      <SidebarHeader className="border-b border-gray-100 bg-gradient-to-r from-blue-50 to-indigo-50">
+      <Sidebar
+          className={ twMerge(
+              "border-r border-gray-200",
+              "dark:border-gray-700"
+          ) }
+      >
+          <SidebarHeader
+              className={ twMerge(
+                  'border-b bg-gradient-to-r ',
+                  "from-blue-50 to-indigo-50 border-gray-100",
+                  "dark:from-gray-800 dark:to-gray-900 dark:border-gray-700",
+              ) }
+          >
         <div className="flex items-center px-4 py-4">
           <div className="flex items-center justify-center w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl shadow-lg">
             <Zap className="h-6 w-6 text-white" />
           </div>
           <div className="ml-3 flex-1">
-            <h1 className="text-lg font-bold text-gray-900">VapeStore</h1>
-            <p className="text-xs text-gray-600">Management System</p>
+              <h1
+                  className={ twMerge(
+                      "text-lg font-bold text-gray-900",
+                      "dark:text-gray-100"
+                  ) }
+              >
+                  VapeStore
+              </h1>
+              <p
+                  className={ twMerge(
+                      "text-xs text-gray-600",
+                      "dark:text-gray-400"
+                  ) }
+              >
+                  Management System
+              </p>
           </div>
           <div className="md:hidden">
             <SidebarTrigger />
@@ -141,12 +174,22 @@ export function AppSidebar({ lowStockProducts, totalTransaction, totalSellToday 
         <div className="px-4 pb-4">
           <div className="grid grid-cols-2 gap-2">
             {quickActions.map((action, index) => (
-              <div key={index} className="bg-white rounded-lg p-3 shadow-sm border border-gray-100">
+                <div
+                    key={ index }
+                    className={ twMerge(
+                        "bg-white rounded-lg p-3 shadow-sm border border-gray-100",
+                        "dark:bg-gray-900 dark:border-gray-700"
+                    ) }
+                >
                 <div className="flex items-center justify-between">
-                  <action.icon className={`h-4 w-4 ${action.color}`} />
-                  <span className="text-xs font-medium text-gray-900">{action.value}</span>
+                    <action.icon className={ twMerge("h-4 w-4", action.color) }/>
+                    <span className={ twMerge("text-xs font-medium text-gray-900", "dark:text-gray-100") }>
+                    { action.value }
+                  </span>
                 </div>
-                <p className="text-xs text-gray-600 mt-1">{action.title}</p>
+                    <p className={ twMerge("text-xs text-gray-600 mt-1", "dark:text-gray-400") }>
+                        { action.title }
+                    </p>
               </div>
             ))}
           </div>
@@ -169,11 +212,12 @@ export function AppSidebar({ lowStockProducts, totalTransaction, totalSellToday 
                       className="flex items-center gap-3 px-3 py-6 rounded-lg transition-all duration-200"
                     >
                       <div
-                        className={`flex items-center justify-center w-8 h-8 rounded-lg transition-colors ${
+                          className={ twMerge(
+                              "flex items-center justify-center w-8 h-8 rounded-lg transition-colors",
                           isActive(item.path)
-                            ? "bg-blue-100 text-blue-600"
-                            : "bg-gray-100 text-gray-600 group-hover:bg-blue-50 group-hover:text-blue-600"
-                        }`}
+                              ? "bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-400"
+                              : "bg-gray-100 text-gray-600 group-hover:bg-blue-50 group-hover:text-blue-600 dark:bg-gray-700 dark:text-gray-400 dark:group-hover:bg-blue-800 dark:group-hover:text-blue-400"
+                          ) }
                       >
                         <item.icon className="h-4 w-4" />
                       </div>
@@ -186,7 +230,7 @@ export function AppSidebar({ lowStockProducts, totalTransaction, totalSellToday 
                             </Badge>
                           )}
                         </div>
-                        <p className="text-xs text-gray-500 truncate">{item.description}</p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{ item.description }</p>
                       </div>
                     </Link>
                   </SidebarMenuButton>
@@ -213,11 +257,12 @@ export function AppSidebar({ lowStockProducts, totalTransaction, totalSellToday 
                       className="flex items-center gap-3 px-3 py-6 rounded-lg transition-all duration-200"
                     >
                       <div
-                        className={`flex items-center justify-center w-8 h-8 rounded-lg transition-colors ${
+                          className={ twMerge(
+                              "flex items-center justify-center w-8 h-8 rounded-lg transition-colors",
                           isActive(item.path)
-                            ? "bg-blue-100 text-blue-600"
-                            : "bg-gray-100 text-gray-600 group-hover:bg-blue-50 group-hover:text-blue-600"
-                        }`}
+                              ? "bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-400"
+                              : "bg-gray-100 text-gray-600 group-hover:bg-blue-50 group-hover:text-blue-600 dark:bg-gray-700 dark:text-gray-400 dark:group-hover:bg-blue-800 dark:group-hover:text-blue-400"
+                          ) }
                       >
                         <item.icon className="h-4 w-4" />
                       </div>
@@ -230,7 +275,7 @@ export function AppSidebar({ lowStockProducts, totalTransaction, totalSellToday 
                             </Badge>
                           )}
                         </div>
-                        <p className="text-xs text-gray-500 truncate">{item.description}</p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{ item.description }</p>
                       </div>
                     </Link>
                   </SidebarMenuButton>
@@ -254,20 +299,24 @@ export function AppSidebar({ lowStockProducts, totalTransaction, totalSellToday 
                   <SidebarMenuButton asChild isActive={isActive(item.path)} className="group relative overflow-hidden">
                     <Link
                       href={item.path}
-                       className="flex items-center gap-3 px-3 ppy-6 rounded-lg transition-all duration-200"
+                      className="flex items-center gap-3 px-3 py-6 rounded-lg transition-all duration-200"
                     >
                       <div
-                        className={`flex items-center justify-center w-8 h-8 rounded-lg transition-colors ${
+                          className={ twMerge(
+                              "flex items-center justify-center w-8 h-8 rounded-lg transition-colors",
                           isActive(item.path)
-                            ? "bg-blue-100 text-blue-600"
-                            : "bg-gray-100 text-gray-600 group-hover:bg-blue-50 group-hover:text-blue-600"
-                        }`}
+                              ? "bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-400"
+                              : "bg-gray-100 text-gray-600 group-hover:bg-blue-50 group-hover:text-blue-600 dark:bg-gray-700 dark:text-gray-400 dark:group-hover:bg-blue-800 dark:group-hover:text-blue-400"
+                          ) }
                       >
                         <item.icon className="h-4 w-4" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <span className="font-medium text-sm">{item.title}</span>
-                        <p className="text-xs text-gray-500 truncate">{item.description}</p>
+                          <div className="flex items-center justify-between">
+                              <span className="font-medium text-sm">{ item.title }</span>
+
+                          </div>
+                          <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{ item.description }</p>
                       </div>
                     </Link>
                   </SidebarMenuButton>
@@ -304,9 +353,13 @@ export function AppSidebar({ lowStockProducts, totalTransaction, totalSellToday 
           </>
         )}
       </SidebarContent>
-
-      <SidebarFooter className="border-t border-gray-100 bg-gray-50/50">
-        <div className="p-3">
+          <SidebarFooter
+              className={ twMerge(
+                  "border-t border-gray-100 bg-gray-50/20",
+                  "dark:border-gray-700 dark:bg-gray-800/30"
+              ) }
+          >
+              <div className="p-3">
           {/* User Profile */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -317,8 +370,22 @@ export function AppSidebar({ lowStockProducts, totalTransaction, totalSellToday 
                     <AvatarFallback className="bg-blue-100 text-blue-600 text-sm font-medium">AD</AvatarFallback>
                   </Avatar>
                   <div className="flex-1 text-left min-w-0">
-                    <p className="text-sm font-medium text-gray-900 truncate">Admin Store</p>
-                    <p className="text-xs text-gray-500 truncate">admin@vapestore.com</p>
+                      <p
+                          className={ twMerge(
+                              "text-sm font-medium text-gray-900 truncate",
+                              "dark:text-gray-100"
+                          ) }
+                      >
+                          Admin Store
+                      </p>
+                      <p
+                          className={ twMerge(
+                              "text-xs text-gray-500 truncate",
+                              "dark:text-gray-400"
+                          ) }
+                      >
+                          admin@vapestore.com
+                      </p>
                   </div>
                   <ChevronDown className="h-4 w-4 text-gray-400" />
                 </div>

@@ -5,8 +5,9 @@ export const PreOrderModel = z.object({
     id: z.number().int(),
     customerId: z.number().int(),
     productId: z.number().int(),
-    quantity: z.number().int(),
+    quantity: z.number().int().min(1),
     estimatedDate: z.date(),
+    createdAt: z.date(),
     status: z.string().min(1),
 })
 

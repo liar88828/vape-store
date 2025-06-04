@@ -109,13 +109,14 @@ export async function updateProduct(formData: ProductModelType): Promise<ActionR
     };
 }
 
-export type preorderProduct = PreOrder & {
+export type PreorderProduct = PreOrder & {
     customer: Customer
     product: Product
 };
 
-export async function getPreOrder(): Promise<preorderProduct[]> {
+export async function getPreOrder(): Promise<PreorderProduct[]> {
     return prisma.preOrder.findMany({
+        orderBy: {},
         include: {
             customer: true,
             product: true

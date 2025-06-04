@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { Customer, Product } from "@prisma/client";
 
 export async function preOrderProduct(
-    data: { quantity: number },
+    data: { quantity: number, date: Date },
     product: Product,
     customer: Customer | null,
 ): Promise<ActionResponse> {
@@ -19,7 +19,7 @@ export async function preOrderProduct(
     const dataPreorder = await prisma.preOrder.create({
         data: {
             productId: product.id,
-            estimatedDate: new Date(),
+            estimatedDate: data.date,
             status: 'Order',
             quantity: data.quantity,
             customerId: customer.id

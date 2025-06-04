@@ -5,14 +5,14 @@ export const ProductModel = z.object({
     id: z.number().int(),
     name: z.string().min(1),
     category: z.string().min(1),
-    price: z.number().int(),
-    stock: z.number().int(),
+    price: z.number().int().min(1),
+    stock: z.number().int().min(1),
     minStock: z.number().int(),
     image: z.string().min(1),
     description: z.string().min(1),
     nicotineLevel: z.string().nullish(),
     flavor: z.string().nullish(),
-    type: z.string(),
+    type: z.string().min(1),
 })
 
 export interface CompleteProduct extends z.infer<typeof ProductModel> {
