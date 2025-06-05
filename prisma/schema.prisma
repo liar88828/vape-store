@@ -80,13 +80,17 @@ model PreOrder {
 }
 
 model Sale {
-    id         Int         @id @default(autoincrement())
-    date       DateTime
-    total      Int /// @zod.min(1 )
-    items      Int /// @zod.min(1 )
-    customer   Customer    @relation(fields: [customerId], references: [id])
-    customerId Int
-    SaleItems  SalesItem[]
+    id                Int         @id @default(autoincrement())
+    date              DateTime
+    total             Int /// @zod.min(1 )
+    items             Int /// @zod.min(1 )
+    customer          Customer    @relation(fields: [customerId], references: [id])
+    customerId        Int
+    SaleItems         SalesItem[]
+    /// @zod.min(1 )
+    statusTransaction String //@default("Pending") // Pending , Accept
+    /// @zod.min(1 )
+    typeTransaction   String //@default("Cash") // Cash, Transfer
 }
 
 model SalesItem {
@@ -97,7 +101,7 @@ model SalesItem {
     productId Int
     quantity  Int /// @zod.min(1 )
     price     Int /// @zod.min(1 )
-    category  String // redundant but helps snapshot data
+    // category  String // redundant but helps snapshot data
 }
 
 model MemberTier {

@@ -22,7 +22,7 @@ export type SaleCustomers = Sale & {
 //     })
 // }
 
-export async function SaleCustomers(range: RangeStats) {
+export async function saleCustomersAction(range: RangeStats) {
     const now = new Date();
     let startDate: Date;
 
@@ -315,6 +315,8 @@ export async function createTransaction(product: CartItem[], customer: Customer 
                     total: product.reduce((a, b) => a + (b.price * b.quantity), 0),
                     date: new Date(),
                     customerId: customer.id,
+                    statusTransaction: 'Sistem Dev'// "Pending",
+                    , typeTransaction: 'Sistem Dev'//'Cash'
                 }
             })
 
@@ -322,8 +324,8 @@ export async function createTransaction(product: CartItem[], customer: Customer 
                 return {
                     saleId: saleDB.id,
                     productId: item.id,
-                    quantity: item.quantity,
-                    price: item.price,
+                    quantity: item.quantity, // from origin product
+                    price: item.price,// from origin product
                     category: item.category,
                 }
             })

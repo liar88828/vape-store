@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { HTMLInputTypeAttribute } from 'react';
 import { ControllerRenderProps, useFormContext } from "react-hook-form"
 import { Input } from "@/components/ui/input"; // adjust the import path
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -13,7 +13,7 @@ import { Popover, PopoverContent, PopoverTrigger, } from "@/components/ui/popove
 
 type FormHookProps = {
     name: string;
-    type?: string;
+    type?: HTMLInputTypeAttribute
     title: string;
     placeholder: string
 };

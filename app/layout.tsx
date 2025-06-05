@@ -24,6 +24,7 @@ export default async function RootLayout(
 ) {
     const cookieStore = await cookies()
     const defaultOpen = cookieStore.get("sidebar_state")?.value === "true"
+
     return (
 
         <html lang="id" suppressHydrationWarning>
@@ -41,7 +42,7 @@ export default async function RootLayout(
                 />
                 <SidebarInset>
                     <main className="flex-1 overflow-y-auto ">
-                        <HeaderComponent/>
+                        <HeaderComponent lowStockProducts={ await getProductLowStock() }/>
                         { children }
                     </main>
                 </SidebarInset>

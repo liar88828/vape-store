@@ -278,52 +278,53 @@ export function CustomerDetailDialog({ customer }: { customer: CustomerRelationa
                 </Button>
             </DialogTrigger>
 
-            <DialogContent className="max-w-3xl">
+            <DialogContent className=" max-w-3xl md:min-w-2xl">
                 <DialogHeader>
                     <DialogTitle>Customer Detail: { customer.name }</DialogTitle>
                 </DialogHeader>
 
-                <div className="space-y-4">
+                <div className="space-y-4 ">
                     <section className="grid grid-cols-2 gap-4">
                         <div><strong>Name:</strong> { customer.name }</div>
                         <div><strong>Age:</strong> { customer.age }</div>
                         <div><strong>Status:</strong> { customer.status }</div>
                         <div><strong>Total Purchase:</strong> { formatRupiah(customer.totalPurchase) }</div>
-                        <div className="col-span-2">
-                            <strong>Last Purchase:</strong> { formatDateIndo(customer.lastPurchase) }
-                        </div>
+                        <div><strong>Last Purchase:</strong> { formatDateIndo(customer.lastPurchase) }</div>
                     </section>
+                    <div className="grid grid-cols-2 gap-4">
 
-                    <section>
-                        <h3 className="text-lg font-semibold mt-4">Sales History</h3>
-                        <ul className="mt-2 space-y-2">
-                            { customer.Sales.map(sale => (
-                                <li key={ sale.id } className="border p-2 rounded shadow-sm">
-                                    <div><strong>Date:</strong> { formatDateIndo(sale.date) }</div>
-                                    <div><strong>Total:</strong> { formatRupiah(sale.total) }</div>
-                                    <div><strong>Items:</strong> { sale.items }</div>
-                                </li>
-                            )) }
-                            { customer.Sales.length === 0 && <p className="text-gray-500 italic">No sales data.</p> }
-                        </ul>
-                    </section>
+                        <section>
+                            <h3 className="text-lg font-semibold mt-4">Sales History</h3>
+                            <ul className="mt-2 space-y-2 h-96 overflow-y-auto">
+                                { customer.Sales.map(sale => (
+                                    <li key={ sale.id } className="border p-2 rounded shadow-sm">
+                                        <div><strong>Date:</strong> { formatDateIndo(sale.date) }</div>
+                                        <div><strong>Total:</strong> { formatRupiah(sale.total) }</div>
+                                        <div><strong>Items:</strong> { sale.items }</div>
+                                    </li>
+                                )) }
+                                { customer.Sales.length === 0 &&
+										<p className="text-gray-500 italic">No sales data.</p> }
+                            </ul>
+                        </section>
 
-                    <section>
-                        <h3 className="text-lg font-semibold mt-4">Pre-Orders</h3>
-                        <ul className="mt-2 space-y-2">
-                            { customer.PreOrders.map(po => (
-                                <li key={ po.id } className="border p-2 rounded shadow-sm">
-                                    <div><strong>Product:</strong> { po.product.name }</div>
-                                    <div><strong>Quantity:</strong> { po.quantity }</div>
-                                    <div><strong>Estimated
-                                        Date:</strong> { new Date(po.estimatedDate).toLocaleDateString() }</div>
-                                    <div><strong>Status:</strong> { po.status }</div>
-                                </li>
-                            )) }
-                            { customer.PreOrders.length === 0 &&
-									<p className="text-gray-500 italic">No pre-orders.</p> }
-                        </ul>
-                    </section>
+                        <section>
+                            <h3 className="text-lg font-semibold mt-4">Pre-Orders</h3>
+                            <ul className="mt-2 space-y-2 h-96 overflow-y-auto">
+                                { customer.PreOrders.map(po => (
+                                    <li key={ po.id } className="border p-2 rounded shadow-sm">
+                                        <div><strong>Product:</strong> { po.product.name }</div>
+                                        <div><strong>Quantity:</strong> { po.quantity }</div>
+                                        <div><strong>Estimated
+                                            Date:</strong> { new Date(po.estimatedDate).toLocaleDateString() }</div>
+                                        <div><strong>Status:</strong> { po.status }</div>
+                                    </li>
+                                )) }
+                                { customer.PreOrders.length === 0 &&
+										<p className="text-gray-500 italic">No pre-orders.</p> }
+                            </ul>
+                        </section>
+                    </div>
                 </div>
             </DialogContent>
         </Dialog>

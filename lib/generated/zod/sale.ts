@@ -7,6 +7,8 @@ export const SaleModel = z.object({
     total: z.number().int().min(1),
     items: z.number().int().min(1),
     customerId: z.number().int(),
+    statusTransaction: z.string().min(1),
+    typeTransaction: z.string().min(1),
 })
 
 export interface CompleteSale extends z.infer<typeof SaleModel> {

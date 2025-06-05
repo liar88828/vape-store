@@ -22,31 +22,14 @@ import { formatDateIndo, formatRupiah, formatRupiahShort } from "@/lib/my-utils"
 import { ChartData, DashboardStats, SaleCustomers } from "@/action/sale-action";
 import { Bar, BarChart, CartesianGrid, XAxis } from "recharts"
 import { ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent, } from "@/components/ui/chart"
-import { twMerge } from "tailwind-merge"
 import clsx from "clsx"
 import { Invoice } from "./invoice"
 import { useRef, useState } from "react"
 import { useReactToPrint } from "react-to-print";
 import { useRouter } from "next/navigation"
 import { RangeStats } from "@/interface/actionType"
-
-export const description = "A bar chart"
-
-// const chartData = [
-//     { month: "January", desktop: 186 },
-//     { month: "February", desktop: 305 },
-//     { month: "March", desktop: 237 },
-//     { month: "April", desktop: 73 },
-//     { month: "May", desktop: 209 },
-//     { month: "June", desktop: 214 },
-// ]
-
-const chartConfig = {
-    desktop: {
-        label: "Desktop",
-        color: "var(--chart-1)",
-    },
-} satisfies ChartConfig
+import * as XLSX from 'xlsx';
+import { DailySalesReport_x5_indonesia } from "@/components/daily-report";
 
 interface ReportsPageProps {
     range: RangeStats,
@@ -60,8 +43,12 @@ interface ReportsPageProps {
     }
 }
 
+
 export function ReportsPage({ range, sales, chartData, trending, stats }: ReportsPageProps) {
+    // console.log({ range, sales, chartData, trending, stats })
     const router = useRouter();
+    const contentRef = useRef<HTMLDivElement>(null)
+    const onPrintPage = useReactToPrint({ contentRef })
     const [ selectedRange, setSelectedRange ] = useState<RangeStats>(range);
     const handleSelectChange = (value: RangeStats) => {
         setSelectedRange(value);
@@ -76,7 +63,67 @@ export function ReportsPage({ range, sales, chartData, trending, stats }: Report
         'Tahun': range === 'year',
         'Minggu': range === 'week',
     })
+    const chartConfig = {
+        desktop: {
+            label: "Desktop",
+            color: "var(--chart-1)",
+        },
+    } satisfies ChartConfig
 
+    function getGrowthColorClass(growth: number | boolean) {
+        if (typeof growth === "boolean") {
+            return growth ? "text-green-600" : "text-red-600";
+        }
+
+        return growth < 0 ? "text-red-600" : "text-green-600";
+    }
+
+    function exportToExcel(salesx: ReportsPageProps['sales']): void {
+        const rows: Record<string, any>[] = [];
+        let prevSaleId: number | null = null;
+
+        salesx.forEach((sale) => {
+            sale.SaleItems.forEach((item, index) => {
+                rows.push({
+                    SaleID: sale.id === prevSaleId ? '' : sale.id, // add '' if same sale id
+                    Date: sale.id === prevSaleId ? '' : formatDateIndo(sale.date),
+                    "Customer Name": sale.id === prevSaleId ? '' : sale.customer.name,
+                    "Customer Status": sale.id === prevSaleId ? '' : sale.customer.status,
+                    "Product Name": item.product.name,
+                    Category: item.product.category,
+                    Quantity: item.quantity,
+                    "Unit Price": item.price.toLocaleString('en-US'),      // comma thousands separator
+                    "Total Price": (item.quantity * item.price).toLocaleString('en-US'), // comma thousands separator
+                    "Nicotine": item.product.nicotineLevel,
+                    Flavor: item.product.flavor,
+                    Type: item.product.type,
+                });
+
+                prevSaleId = sale.id;
+            });
+        });
+        const worksheet = XLSX.utils.json_to_sheet(rows);
+
+        worksheet['!cols'] = [
+            { wch: 6 }, // A: SaleID
+            { wch: 15 }, // B: Date
+            { wch: 10 }, // C: CustomerName
+            { wch: 14 }, // D: CustomerStatus
+            { wch: 15 }, // E: ProductName
+            { wch: 8 }, // F Category (wider)
+            { wch: 8 }, // G: Quantity
+            { wch: 10 }, // H: UnitPrice
+            { wch: 10 }, // I: TotalPrice
+            { wch: 8 }, // J: NicotineLevel
+            { wch: 18 }, // K: Flavor (wider)
+            { wch: 9 }, // L: Type (wider)
+        ];
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, 'SalesData');
+
+        const today = new Date().toISOString().split('T')[0];
+        XLSX.writeFile(workbook, `Sales_Report_${ today }.xlsx`);
+    }
 
 
     return (
@@ -95,10 +142,46 @@ export function ReportsPage({ range, sales, chartData, trending, stats }: Report
                             <SelectItem value="year">Tahun Ini</SelectItem>
                         </SelectContent>
                     </Select>
-                    <Button variant="outline">
-                        <BarChart3 className="h-4 w-4 mr-2"/>
-                        Export
-                    </Button>
+                    <Dialog>
+                        <DialogTrigger asChild>
+                            <Button variant="outline">
+                                <BarChart3 className="h-4 w-4 mr-2"/>
+                                Export
+                            </Button>
+                        </DialogTrigger>
+                        <DialogContent
+                            className="min-w-4xl max-h-[90vh] overflow-y-auto"
+                        >
+                            <DialogHeader>
+                                <DialogTitle>Daily Sales Report</DialogTitle>
+                                <DialogDescription>
+                                    A detailed export of daily sales performance including stats and trends.
+                                </DialogDescription>
+                            </DialogHeader>
+
+                            <div ref={ contentRef } className="py-4">
+                                <DailySalesReport_x5_indonesia
+                                    sales={ sales }
+                                    stats={ stats }
+                                    range={ range }
+                                    trending={ trending }
+                                />
+                            </div>
+
+                            <DialogFooter>
+                                <DialogClose asChild>
+                                    <Button onClick={ () => exportToExcel(sales) }>Excel</Button>
+                                </DialogClose>
+
+                                <DialogClose asChild>
+                                    <Button onClick={ () => onPrintPage() }>Print</Button>
+                                </DialogClose>
+                                <DialogClose asChild>
+                                    <Button variant="secondary">Close</Button>
+                                </DialogClose>
+                            </DialogFooter>
+                        </DialogContent>
+                    </Dialog>
                 </div>
             </div>
 
@@ -110,8 +193,8 @@ export function ReportsPage({ range, sales, chartData, trending, stats }: Report
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold">{ formatRupiahShort(stats.totalSales) }</div>
-                        <p className="text-sm text-green-600">{ stats.salesGrowth.toFixed(2) }%
-                            dari { rangeIndo } lalu</p>
+                        <p className={ `text-sm ${ getGrowthColorClass(stats.salesGrowth) }` }>
+                            { stats.salesGrowth.toFixed(2) }% dari { rangeIndo } lalu</p>
                     </CardContent>
                 </Card>
 
@@ -121,8 +204,9 @@ export function ReportsPage({ range, sales, chartData, trending, stats }: Report
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold">{ stats.transactions }</div>
-                        <p className="text-sm text-green-600">{ (stats.transactionsGrowth).toFixed(2) }%
-                            dari { rangeIndo } lalu</p>
+                        <p className={ `text-sm ${ getGrowthColorClass(stats.transactionsGrowth) }` }>
+                            { (stats.transactionsGrowth).toFixed(2) }% dari { rangeIndo } lalu
+                        </p>
                     </CardContent>
                 </Card>
 
@@ -132,8 +216,8 @@ export function ReportsPage({ range, sales, chartData, trending, stats }: Report
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold">{ formatRupiahShort(stats.avgTransaction) }</div>
-                        <p className="text-sm text-green-600">+{ stats.avgTransactionGrowth.toFixed(2) }%
-                            dari { rangeIndo } lalu</p>
+                        <p className={ `text-sm ${ getGrowthColorClass(stats.avgTransactionGrowth) }` }>
+                            { stats.avgTransactionGrowth.toFixed(2) }% dari { rangeIndo } lalu</p>
                     </CardContent>
                 </Card>
 
@@ -179,11 +263,9 @@ export function ReportsPage({ range, sales, chartData, trending, stats }: Report
                     </ChartContainer>
 
                 </CardContent>
+
                 <CardFooter className="flex-col items-start gap-2 text-sm">
-                    <div className={
-                        twMerge("flex gap-2 leading-none font-medium ",
-                            clsx(trending.isUp ? 'text-green-600' : 'text-red-600')
-                        ) }>
+                    <div className={ `flex gap-2 leading-none font-medium ${ getGrowthColorClass(trending.isUp) }` }>
                         { trending.changeText } { trending.isUp
                         ? <TrendingUp className="h-4 w-4 "/>
                         : <TrendingDown className="h-4 w-4 "/> }
@@ -251,14 +333,14 @@ export function ReportsPage({ range, sales, chartData, trending, stats }: Report
                         <div>
                             <h3 className="font-medium mb-4">Promo Aktif</h3>
                             <div className="space-y-3">
-                                <div className="flex justify-between items-center p-3 border rounded">
+                                <div className="flex justify-between items-center p-3 border rounded-lg">
                                     <div>
                                         <p className="font-medium">Buy 2 Get 1 Liquid</p>
                                         <p className="text-sm text-muted-foreground">Berlaku untuk semua liquid</p>
                                     </div>
                                     <Badge variant="default">Aktif</Badge>
                                 </div>
-                                <div className="flex justify-between items-center p-3 border rounded">
+                                <div className="flex justify-between items-center p-3 border rounded-lg">
                                     <div>
                                         <p className="font-medium">Diskon 15% Device</p>
                                         <p className="text-sm text-muted-foreground">Minimal pembelian Rp 500.000</p>
@@ -325,8 +407,8 @@ export function ModalSalesDetail({ sale }: { sale: SaleCustomers }) {
                 <div className="mt-4 space-y-2 text-sm">
                     <p><strong>Daftar Produk:</strong></p>
                     <ul className="space-y-1">
-                        { sale.SaleItems.map((item, index) => (
-                            <li key={ index } className="flex justify-between">
+                        { sale.SaleItems.map((item) => (
+                            <li key={ item.id } className="flex justify-between">
                                 <span>{ item.product.name } : { item.quantity } × { formatRupiah(item.price) }</span>
                                 <span>{ formatRupiah(item.price * item.quantity) }</span>
                             </li>

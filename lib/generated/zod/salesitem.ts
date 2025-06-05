@@ -7,7 +7,6 @@ export const SalesItemModel = z.object({
     productId: z.number().int(),
     quantity: z.number().int().min(1),
     price: z.number().int().min(1),
-    category: z.string(),
 })
 
 export interface CompleteSalesItem extends z.infer<typeof SalesItemModel> {

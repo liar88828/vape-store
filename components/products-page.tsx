@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState } from "react"
+import React, { useMemo, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -18,7 +18,7 @@ import {
     DialogTitle,
     DialogTrigger
 } from "@/components/ui/dialog"
-import { Eye, Pencil, Plus, Trash2, XIcon } from "lucide-react"
+import { ChevronLeft, ChevronRight, Eye, Pencil, Plus, Trash2, XIcon } from "lucide-react"
 import { choose, formatRupiah, getValueLabel, toastResponse, truncateText, variantStatus } from "@/lib/my-utils";
 import { Product } from "@/lib/data";
 import { InputHook, SelectHook, TextareaHook } from "@/components/form-hook";
@@ -34,12 +34,57 @@ interface ProductsPageProps {
 }
 
 export function ProductsPage({ products }: ProductsPageProps) {
-    const [ searchTerm, setSearchTerm ] = useState("")
-    const [ categoryFilter, setCategoryFilter ] = useState("all")
-    const [ nicotineFilter, setNicotineFilter ] = useState("all")
-    const [ deviceTypeFilter, setDeviceTypeFilter ] = useState("all")
-    const [ stockFilter, setStockFilter ] = useState("all")
+    // Filters
+    const [ searchTerm, setSearchTerm ] = useState("");
+    const [ categoryFilter, setCategoryFilter ] = useState("all");
+    const [ nicotineFilter, setNicotineFilter ] = useState("all");
+    const [ deviceTypeFilter, setDeviceTypeFilter ] = useState("all");
+    const [ stockFilter, setStockFilter ] = useState("all");
 
+    // Pagination
+    const [ currentPage, setCurrentPage ] = useState(1);
+    const [ itemsPerPage, setItemsPerPage ] = useState(6);
+
+    // Filtered Products
+    const filteredProducts = useMemo(() => {
+        const searchLower = searchTerm.toLowerCase();
+        const categoryLower = categoryFilter.toLowerCase();
+
+        return products.filter(({ name, category, nicotineLevel, type, stock, minStock }) => {
+            if (!name.toLowerCase().includes(searchLower)) return false;
+
+            if (categoryFilter !== "all" && category.toLowerCase() !== categoryLower) return false;
+
+            if (nicotineFilter !== "all" && nicotineLevel !== nicotineFilter) return false;
+
+            if (deviceTypeFilter !== "all" && type !== deviceTypeFilter) return false;
+
+            switch (stockFilter) {
+                case "available":
+                    if (stock <= 0) return false;
+                    break;
+                case "low":
+                    if (stock === 0 || stock > minStock) return false;
+                    break;
+                case "out":
+                    if (stock !== 0) return false;
+                    break;
+            }
+
+            return true;
+        });
+    }, [ products, searchTerm, categoryFilter, nicotineFilter, deviceTypeFilter, stockFilter ]);
+
+    // Total Pages
+    const totalPages = useMemo(() => {
+        return Math.ceil(filteredProducts.length / itemsPerPage);
+    }, [ filteredProducts.length, itemsPerPage ]);
+
+    // Paginated Products
+    const paginatedProducts = useMemo(() => {
+        const start = (currentPage - 1) * itemsPerPage;
+        return filteredProducts.slice(start, start + itemsPerPage);
+    }, [ filteredProducts, currentPage, itemsPerPage ]);
     const onReset = () => {
         setSearchTerm("")
         setNicotineFilter("all")
@@ -47,24 +92,6 @@ export function ProductsPage({ products }: ProductsPageProps) {
         setDeviceTypeFilter("all")
         setStockFilter("all")
     }
-
-    const filteredProducts = products.filter((product) => {
-        const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase())
-        const matchesCategory = categoryFilter === "all" || product.category.toLowerCase() === categoryFilter.toLowerCase()
-        const matchesNicotine = nicotineFilter === "all" || product.nicotineLevel === nicotineFilter
-        const matchesDeviceType = deviceTypeFilter === "all" || product.type === deviceTypeFilter
-
-        let matchesStock = true
-        if (stockFilter === "available") {
-            matchesStock = product.stock > 0
-        } else if (stockFilter === "low") {
-            matchesStock = product.stock <= product.minStock && product.stock > 0
-        } else if (stockFilter === "out") {
-            matchesStock = product.stock === 0
-        }
-
-        return matchesSearch && matchesCategory && matchesNicotine && matchesDeviceType && matchesStock
-    })
 
     return (
         <div className="p-6 max-w-7xl mx-auto">
@@ -80,89 +107,121 @@ export function ProductsPage({ products }: ProductsPageProps) {
 
                 <CardHeader>
                     <CardTitle>Filter Produk</CardTitle>
-                </CardHeader>
-
-                <CardContent>
-
-                    <div className="flex items-end gap-2 flex-row flex-wrap md:flex-nowrap lg:justify-between">
-                        <div className="w-full md:max-w-lg">
-                            <Label>Search</Label>
-                            <Input
-                                placeholder="Cari produk..."
-                                // className="max-w-sm"
-                                value={ searchTerm }
-                                onChange={ (e) => setSearchTerm(e.target.value) }
-                            />
+                    <div className="flex gap-6 justify-between flex-col sm:flex-row">
+                        <div className="grid grid-cols-1 gap-4 w-full max-w-md">
+                            <div className="w-full md:max-w-xl">
+                                <Input
+                                    placeholder="Cari produk..."
+                                    // className="max-w-sm"
+                                    value={ searchTerm }
+                                    onChange={ (e) => setSearchTerm(e.target.value) }
+                                />
+                            </div>
+                            <div className="flex justify-between gap-2">
+                                <div>
+                                    <Label>Kategori</Label>
+                                    <Select
+                                        value={ categoryFilter } onValueChange={ setCategoryFilter }>
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Semua kategori"/>
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="all">Semua</SelectItem>
+                                            <SelectItem value="device">Device</SelectItem>
+                                            <SelectItem value="liquid">Liquid</SelectItem>
+                                            <SelectItem value="coil">Coil</SelectItem>
+                                            <SelectItem value="aksesoris">Aksesoris</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <div>
+                                    <Label className={ 'text-nowrap' }>Level Nikotin</Label>
+                                    <Select value={ nicotineFilter } onValueChange={ setNicotineFilter }>
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Semua level"/>
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="all">Semua</SelectItem>
+                                            <SelectItem value="0mg">0mg</SelectItem>
+                                            <SelectItem value="3mg">3mg</SelectItem>
+                                            <SelectItem value="6mg">6mg</SelectItem>
+                                            <SelectItem value="12mg">12mg</SelectItem>
+                                            <SelectItem value="25mg">25mg+</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <div>
+                                    <Label>Tipe Device</Label>
+                                    <Select value={ deviceTypeFilter } onValueChange={ setDeviceTypeFilter }>
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Semua tipe"/>
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="all">Semua</SelectItem>
+                                            <SelectItem value="Pod System">Pod System</SelectItem>
+                                            <SelectItem value="Mod">Mod</SelectItem>
+                                            <SelectItem value="Disposable">Disposable</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <div>
+                                    <Label>Status Stok</Label>
+                                    <Select value={ stockFilter } onValueChange={ setStockFilter }>
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Semua status"/>
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="all">Semua</SelectItem>
+                                            <SelectItem value="available">Tersedia</SelectItem>
+                                            <SelectItem value="low">Stok Rendah</SelectItem>
+                                            <SelectItem value="out">Habis</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <div>
+                                    <Label>Reset</Label>
+                                    <Button onClick={ onReset }> <XIcon/> </Button>
+                                </div>
+                            </div>
                         </div>
-                        <div className="sm:flex-nowrap flex gap-2  w-full md:w-fit md:justify-end flex-wrap  ">
-                            <div>
-                                <Label>Kategori</Label>
-                                <Select
+                        <div className="flex gap-2">
+                            <Select value={ String(itemsPerPage) } onValueChange={ (value) => {
+                                setItemsPerPage(Number(value));
+                                setCurrentPage(1); // Reset ke halaman pertama
+                            } }>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Tampil"/>
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="6">6</SelectItem>
+                                    <SelectItem value="10">10</SelectItem>
+                                    <SelectItem value="15">15</SelectItem>
+                                </SelectContent>
+                            </Select>
+                            <Button
+                                variant="outline"
+                                disabled={ currentPage === 1 }
+                                onClick={ () => setCurrentPage((prev) => prev - 1) }
+                            >
+                                <ChevronLeft/>
+                            </Button>
 
-                                    value={ categoryFilter } onValueChange={ setCategoryFilter }>
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Semua kategori"/>
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="all">Semua</SelectItem>
-                                        <SelectItem value="device">Device</SelectItem>
-                                        <SelectItem value="liquid">Liquid</SelectItem>
-                                        <SelectItem value="coil">Coil</SelectItem>
-                                        <SelectItem value="aksesoris">Aksesoris</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                            <div>
-                                <Label>Level Nikotin</Label>
-                                <Select value={ nicotineFilter } onValueChange={ setNicotineFilter }>
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Semua level"/>
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="all">Semua</SelectItem>
-                                        <SelectItem value="0mg">0mg</SelectItem>
-                                        <SelectItem value="3mg">3mg</SelectItem>
-                                        <SelectItem value="6mg">6mg</SelectItem>
-                                        <SelectItem value="12mg">12mg</SelectItem>
-                                        <SelectItem value="25mg">25mg+</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                            <div>
-                                <Label>Tipe Device</Label>
-                                <Select value={ deviceTypeFilter } onValueChange={ setDeviceTypeFilter }>
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Semua tipe"/>
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="all">Semua</SelectItem>
-                                        <SelectItem value="Pod System">Pod System</SelectItem>
-                                        <SelectItem value="Mod">Mod</SelectItem>
-                                        <SelectItem value="Disposable">Disposable</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                            <div>
-                                <Label>Status Stok</Label>
-                                <Select value={ stockFilter } onValueChange={ setStockFilter }>
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Semua status"/>
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="all">Semua</SelectItem>
-                                        <SelectItem value="available">Tersedia</SelectItem>
-                                        <SelectItem value="low">Stok Rendah</SelectItem>
-                                        <SelectItem value="out">Habis</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                            <div>
-                                <Label>Reset</Label>
-                                <Button onClick={ onReset }> <XIcon/> </Button>
-                            </div>
+                            {/*just for text*/ }
+                            <Button variant="outline" disabled={ true }>
+                                { currentPage } / { totalPages }
+                            </Button>
+
+                            <Button
+                                variant="outline"
+                                disabled={ currentPage === totalPages }
+                                onClick={ () => setCurrentPage((prev) => prev + 1) }
+                            >
+                                <ChevronRight/>
+
+                            </Button>
                         </div>
                     </div>
-                </CardContent>
+                </CardHeader>
 
                 {/* Products Table */ }
                 <CardContent>
@@ -178,7 +237,7 @@ export function ProductsPage({ products }: ProductsPageProps) {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            { filteredProducts.map((product) => (
+                            { paginatedProducts.map((product) => (
                                 <TableRow
                                     key={ product.id }
                                     // className={twMerge(
@@ -268,12 +327,13 @@ export function ModalProductTambah() {
         if (response.success) {
             toast(response.message);
             setOpen(false); // ✅ Close the dialog
+            methods.reset()
         } else {
             toast("You submitted the following values", {
                 description: (
                     <pre className="mt-2 w-[320px] rounded-md bg-neutral-950 p-4">
-                        <code className="text-white">{ JSON.stringify(data, null, 2) }</code>
-                    </pre>
+                            <code className="text-white">{ JSON.stringify(data, null, 2) }</code>
+                        </pre>
                 )
             })
         }
@@ -343,7 +403,7 @@ export function ModalProductTambah() {
 
 
                         </div>
-                        <InputHook name="image" title="URL Gambar" placeholder="Link gambar produk" type="text"/>
+                        <InputHook name="image" title="URL Gambar" placeholder="Link gambar produk" type="url"/>
                         <TextareaHook name="description" title="Deskripsi" placeholder="Deskripsi produk"/>
                         <DialogFooter className="pt-4">
                             <Button type="submit">Simpan Produk</Button>
@@ -451,8 +511,8 @@ export function ModalProductUpdate({ product }: { product: ProductModelType }) {
             toast.error(response.message, {
                 description: (
                     <pre className="mt-2 w-[320px] rounded-md bg-neutral-950 p-4">
-                        <code className="text-white">{ JSON.stringify(data, null, 2) }</code>
-                    </pre>
+                            <code className="text-white">{ JSON.stringify(data, null, 2) }</code>
+                        </pre>
                 ),
             });
         }

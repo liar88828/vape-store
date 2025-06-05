@@ -1,13 +1,13 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import React, { useMemo, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
-import { ChevronLeft, ChevronRight, MinusIcon, Plus, PlusIcon, ShoppingCart, Trash2 } from "lucide-react"
+import { ChevronLeft, ChevronRight, MinusIcon, Plus, PlusIcon, ShoppingCart, Trash2, XIcon } from "lucide-react"
 import { Customer, Product } from "@prisma/client";
 import { chooseStatus, formatRupiah, getStatusVariant, toastResponse } from "@/lib/my-utils";
 import { CartItem } from "@/interface/actionType";
@@ -31,23 +31,37 @@ import { createCustomerNew } from "@/action/customer-action";
 export function POSPage({ products, customers }: { customers: Customer[], products: Product[] }) {
     const [ cartItems, setCartItems ] = useState<CartItem[]>([])
     const [ selectedCustomer, setSelectedCustomer ] = useState<Customer | null>(null)
+    const [ loading, setLoading ] = useState(false)
+    const [ ageValid, setAgeValid ] = useState(false)
+
     const [ searchTerm, setSearchTerm ] = useState("")
     const [ categoryFilter, setCategoryFilter ] = useState("all")
+    const [ nicotineFilter, setNicotineFilter ] = useState("all")
+    const [ deviceTypeFilter, setDeviceTypeFilter ] = useState("all")
+
+    // pagination
     const [ currentPage, setCurrentPage ] = useState(1);
     const [ itemsPerPage, setItemsPerPage ] = useState(6);
-    const [ loading, setLoading ] = useState(false)
 
-    const filteredProducts = products.filter((product) => {
-        const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase())
-        const matchesCategory = categoryFilter === "all" || product.category.toLowerCase() === categoryFilter.toLowerCase()
-        return matchesSearch && matchesCategory
-    })
+    const filteredProducts = useMemo(() => {
+        const searchLower = searchTerm.toLowerCase();
+        const categoryLower = categoryFilter.toLowerCase();
 
-    const paginatedProducts = filteredProducts.slice(
-        (currentPage - 1) * itemsPerPage,
-        currentPage * itemsPerPage
-    );
-    const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
+        return products.filter(product => {
+            const nameMatches = product.name.toLowerCase().includes(searchLower);
+            const categoryMatches = categoryFilter === "all" || product.category.toLowerCase() === categoryLower;
+            return nameMatches && categoryMatches;
+        });
+    }, [ products, searchTerm, categoryFilter ]);
+
+    const totalPages = useMemo(() => {
+        return Math.ceil(filteredProducts.length / itemsPerPage);
+    }, [ filteredProducts.length, itemsPerPage ]);
+
+    const paginatedProducts = useMemo(() => {
+        const start = (currentPage - 1) * itemsPerPage;
+        return filteredProducts.slice(start, start + itemsPerPage);
+    }, [ filteredProducts, currentPage, itemsPerPage ])
 
     const addToCart = (product: Product) => {
         const existingItem = cartItems.find((item) => item.id === product.id)
@@ -70,74 +84,129 @@ export function POSPage({ products, customers }: { customers: Customer[], produc
     const getTotalCart = () => {
         return cartItems.reduce((total, item) => total + item.price * item.quantity, 0)
     }
-
+    const onReset = () => {
+        setSearchTerm("")
+        setNicotineFilter("all")
+        setCategoryFilter("all")
+        setDeviceTypeFilter("all")
+    }
     return (
         <div className="p-6 max-w-7xl mx-auto">
             <h1 className="text-3xl font-bold mb-6">POS Kasir</h1>
 
-            <div className="grid grid-cols-1    xl:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+
                 {/* Product Selection */ }
                 <div className="lg:col-span-2 ">
                     <Card>
                         <CardHeader>
                             <CardTitle>Pilih Produk</CardTitle>
-                            <div className="flex space-x-2">
-                                <Input
-                                    placeholder="Cari produk..."
-                                    className="flex-1"
-                                    value={ searchTerm }
-                                    onChange={ (e) => setSearchTerm(e.target.value) }
-                                />
-                                <Select value={ categoryFilter } onValueChange={ setCategoryFilter }>
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Kategori"/>
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="all">Semua</SelectItem>
-                                        <SelectItem value="device">Device</SelectItem>
-                                        <SelectItem value="liquid">Liquid</SelectItem>
-                                        <SelectItem value="coil">Coil</SelectItem>
-                                        <SelectItem value="aksesoris">Aksesoris</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                                <Select value={ String(itemsPerPage) } onValueChange={ (value) => {
-                                    setItemsPerPage(Number(value));
-                                    setCurrentPage(1); // Reset ke halaman pertama
-                                } }>
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Tampil"/>
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="6">6</SelectItem>
-                                        <SelectItem value="10">10</SelectItem>
-                                        <SelectItem value="15">15</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                                <Button
-                                    variant="outline"
-                                    disabled={ currentPage === 1 }
-                                    onClick={ () => setCurrentPage((prev) => prev - 1) }
-                                >
-                                    <ChevronLeft/>
-                                </Button>
 
-                                {/*just for text*/ }
-                                <Button variant="outline" disabled={ true }>
-                                    { currentPage } / { totalPages }
-                                </Button>
+                            <div className="flex gap-6 justify-between flex-col sm:flex-row">
+                                <div className="grid grid-cols-1 gap-4 w-full max-w-md">
+                                    <div className="w-full md:max-w-lg ">
+                                        <Input
+                                            placeholder="Cari produk..."
+                                            className="flex-1"
+                                            value={ searchTerm }
+                                            onChange={ (e) => setSearchTerm(e.target.value) }
+                                        />
+                                    </div>
+                                    <div className="flex  gap-4">
+                                        <div>
+                                            <Label>Kategori</Label>
+                                            <Select value={ categoryFilter } onValueChange={ setCategoryFilter }>
+                                                <SelectTrigger>
+                                                    <SelectValue placeholder="Kategori"/>
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="all">Semua</SelectItem>
+                                                    <SelectItem value="device">Device</SelectItem>
+                                                    <SelectItem value="liquid">Liquid</SelectItem>
+                                                    <SelectItem value="coil">Coil</SelectItem>
+                                                    <SelectItem value="aksesoris">Aksesoris</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
 
-                                <Button
-                                    variant="outline"
-                                    disabled={ currentPage === totalPages }
-                                    onClick={ () => setCurrentPage((prev) => prev + 1) }
-                                >
-                                    <ChevronRight/>
+                                        <div>
+                                            <Label>Level Nikotin</Label>
+                                            <Select value={ nicotineFilter } onValueChange={ setNicotineFilter }>
+                                                <SelectTrigger>
+                                                    <SelectValue placeholder="Semua level"/>
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="all">Semua</SelectItem>
+                                                    <SelectItem value="0mg">0mg</SelectItem>
+                                                    <SelectItem value="3mg">3mg</SelectItem>
+                                                    <SelectItem value="6mg">6mg</SelectItem>
+                                                    <SelectItem value="12mg">12mg</SelectItem>
+                                                    <SelectItem value="25mg">25mg+</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
 
-                                </Button>
+                                        <div>
+                                            <Label>Tipe Device</Label>
+                                            <Select value={ deviceTypeFilter }
+                                                    onValueChange={ setDeviceTypeFilter }>
+                                                <SelectTrigger>
+                                                    <SelectValue placeholder="Semua tipe"/>
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="all">Semua</SelectItem>
+                                                    <SelectItem value="Pod System">Pod System</SelectItem>
+                                                    <SelectItem value="Mod">Mod</SelectItem>
+                                                    <SelectItem value="Disposable">Disposable</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+
+                                        <div>
+                                            <Label>Reset</Label>
+                                            <Button onClick={ onReset }> <XIcon/> </Button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="flex gap-2">
+                                    <Select value={ String(itemsPerPage) } onValueChange={ (value) => {
+                                        setItemsPerPage(Number(value));
+                                        setCurrentPage(1); // Reset ke halaman pertama
+                                    } }>
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Tampil"/>
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="6">6</SelectItem>
+                                            <SelectItem value="10">10</SelectItem>
+                                            <SelectItem value="15">15</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                    <Button
+                                        variant="outline"
+                                        disabled={ currentPage === 1 }
+                                        onClick={ () => setCurrentPage((prev) => prev - 1) }
+                                    >
+                                        <ChevronLeft/>
+                                    </Button>
+
+                                    {/*just for text*/ }
+                                    <Button variant="outline" disabled={ true }>
+                                        { currentPage } / { totalPages }
+                                    </Button>
+
+                                    <Button
+                                        variant="outline"
+                                        disabled={ currentPage === totalPages }
+                                        onClick={ () => setCurrentPage((prev) => prev + 1) }
+                                    >
+                                        <ChevronRight/>
+
+                                    </Button>
+                                </div>
                             </div>
                         </CardHeader>
                         <CardContent>
-
                             <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-4">
                                 { paginatedProducts.map((product) => {
                                     const cartItem = cartItems.find(item => item.id === product.id);
@@ -145,20 +214,20 @@ export function POSPage({ products, customers }: { customers: Customer[], produc
 
                                     return (
                                         <Card key={ product.id }
-                                              className="cursor-pointer hover:shadow-md transition-shadow">
-                                            <CardContent className="p-4">
-                                                <picture>
-                                                    <img
-                                                        src={ product.image || "/placeholder.svg" }
-                                                        alt={ product.name }
-                                                        className="w-full h-40 object-cover rounded mb-2"
-                                                    />
-                                                </picture>
+                                              className="cursor-pointer hover:shadow-md transition-shadow p-0 gap-0">
+                                            <picture>
+                                                <img
+                                                    src={ product.image }
+                                                    alt={ product.name }
+                                                    className="w-full h-40 object-cover rounded "
+                                                />
+                                            </picture>
+                                            <CardContent className="p-4 md:p-6">
                                                 <h3 className="font-medium text-sm mb-1">{ product.name }</h3>
                                                 <p className="text-xs text-muted-foreground mb-2">{ product.category }</p>
                                                 <div className="flex justify-between items-center">
-                                                    <span
-                                                        className="font-bold text-sm">{ formatRupiah(product.price) }</span>
+                                                                                <span
+                                                                                    className="font-bold text-sm">{ formatRupiah(product.price) }</span>
                                                     <Button size="sm"
                                                             onClick={ () => addToCart(product) }
                                                             disabled={ remainingStock <= 0 }
@@ -246,7 +315,6 @@ export function POSPage({ products, customers }: { customers: Customer[], produc
                                                                 disabled={ product.quantity >= getProductStock(product.id) }
                                                             >
                                                                 <PlusIcon/>
-
                                                             </Button>
 
                                                             {/* Delete button */ }
@@ -273,7 +341,7 @@ export function POSPage({ products, customers }: { customers: Customer[], produc
                                         <div className="border-t pt-4">
                                             <Label className="text-sm font-medium">Verifikasi Umur</Label>
                                             <div className="flex items-center space-x-2 mt-2">
-                                                <Checkbox id="age-verify"/>
+                                                <Checkbox id="age-verify" onClick={ () => setAgeValid(!ageValid) }/>
                                                 <Label htmlFor="age-verify" className="text-sm">
                                                     Pembeli berusia 18+ tahun
                                                 </Label>
@@ -299,13 +367,14 @@ export function POSPage({ products, customers }: { customers: Customer[], produc
                                                     </Button>
                                                 </div>
                                                 : <SelectCustomer
+                                                    ageValid={ ageValid }
                                                     customers={ customers }
                                                     onSelectAction={ (customer) => setSelectedCustomer(customer) }
                                                 /> }
 
                                         </div>
                                         <Button className="w-full" size="lg"
-                                                disabled={ loading }
+                                                disabled={ loading || !selectedCustomer }
                                                 onClick={ async () => {
                                                     setLoading(true)
                                                     toastResponse({
@@ -337,19 +406,28 @@ export function SelectCustomer(
     {
         customers,
         onSelectAction,
+        ageValid
     }: {
-        customers: Customer[];
-        onSelectAction: (customer: Customer) => void;
+        customers: Customer[],
+        onSelectAction
+            :
+            (customer: Customer) => void,
+        ageValid?: boolean
     }) {
     const [ open, setOpen ] = useState(false);
     const [ search, setSearch ] = useState("");
     const [ loading, setLoading ] = useState(false)
-
-    const filteredCustomers = useMemo(() => {
-        return customers.filter((c) =>
-            c.name.toLowerCase().includes(search.toLowerCase())
-        );
-    }, [ customers, search ]);
+    // console.log(ageValid)
+    const filteredCustomers = useMemo(() =>
+            customers.filter(({ name, status }) =>
+                name.toLowerCase().includes(search.toLowerCase()) &&
+                (ageValid ? status !== 'rejected' :
+                        // status === 'verified'
+                        true
+                )
+            ),
+        [ customers, search, ageValid ]
+    );
 
     const methods = useForm<CustomerModelType>({
         resolver: zodResolver(CustomerModelNew),
