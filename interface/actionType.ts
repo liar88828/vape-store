@@ -15,7 +15,7 @@ export type CartItem = Product & {
 
 export type ContextPage = {
     params: Promise<{ slug: string }>
-    searchParams: Promise<{ range: string }>
+    searchParams: Promise<{ range: string, name: string }>
 }
 
 export type RangeStats = 'today' | "week" | "month" | "year" 

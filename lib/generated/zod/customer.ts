@@ -1,5 +1,5 @@
 import * as z from "zod"
-import { CompletePreOrder, CompleteSale, RelatedPreOrderModel, RelatedSaleModel } from "./index"
+import { CompleteSale, RelatedSaleModel, CompletePreOrder, RelatedPreOrderModel } from "./index"
 
 export const CustomerModel = z.object({
     id: z.number().int(),
@@ -8,6 +8,8 @@ export const CustomerModel = z.object({
     totalPurchase: z.number().int().min(1),
     status: z.string().min(1),
     lastPurchase: z.date(),
+    createdAt: z.date().optional(),
+    updatedAt: z.date().optional(),
 })
 
 export interface CompleteCustomer extends z.infer<typeof CustomerModel> {

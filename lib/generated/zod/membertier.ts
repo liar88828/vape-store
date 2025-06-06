@@ -6,4 +6,6 @@ export const MemberTierModel = z.object({
     range: z.string().min(1),
     progress: z.number().int().min(1),
     count: z.number().int().min(1),
+    createdAt: z.date().optional(),
+    updatedAt: z.date().optional(),
 })

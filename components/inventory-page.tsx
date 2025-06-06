@@ -26,7 +26,7 @@ interface InventoryPageProps {
 }
 
 export function InventoryPage({ products, preOrders, lowStockProducts, customers }: InventoryPageProps) {
-    const [ loading, setLoading ] = useState(false)
+    // const [ loading, setLoading ] = useState(false)
     return (
         <div className="p-6 max-w-7xl mx-auto">
             <div className="flex justify-between items-center mb-6 ">
@@ -118,7 +118,8 @@ export function InventoryPage({ products, preOrders, lowStockProducts, customers
                                     <TableCell>{ product.minStock }</TableCell>
                                     <TableCell>{ product.minStock - product.stock + 10 }</TableCell>
                                     <TableCell>
-                                        <ReStockModal product={ product } customers={ customers }/>
+                                        <ReStockModal product={ product }
+                                                      customers={ customers }/>
                                     </TableCell>
                                 </TableRow>
                             )) }
@@ -222,7 +223,7 @@ function ReStockModal({ product, customers }: { product: Product, customers: Cus
             </DialogTrigger>
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle>Tambah Stok xxx</DialogTitle>
+                    <DialogTitle>Tambah Stok</DialogTitle>
                 </DialogHeader>
 
                 { productToAddStock && (

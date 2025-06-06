@@ -46,14 +46,15 @@ export function PreOrderDialog({ orderData }: { orderData: PreorderProduct }) {
                 </div>
                 <DialogFooter>
 
-                    <DialogClose asChild>
-                        <Button onClick={ () => {
+                    {/*<DialogClose asChild>*/ }
+                    <Button
+                        onClick={ () => {
                             reactToPrintFn()
                             setOpen(false)
                         } }>
                             <Printer/> Print
                         </Button>
-                    </DialogClose>
+                    {/*</DialogClose>*/ }
                     <DialogClose asChild>
                         <Button variant="secondary">
                             Close

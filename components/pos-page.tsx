@@ -1,15 +1,15 @@
 "use client"
 
-import React, { useMemo, useState } from "react"
+import React, { useEffect, useMemo, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
-import { ChevronLeft, ChevronRight, MinusIcon, Plus, PlusIcon, ShoppingCart, Trash2, XIcon } from "lucide-react"
+import { ChevronLeft, ChevronRight, MinusIcon, Plus, PlusIcon, Search, ShoppingCart, Trash2, XIcon } from "lucide-react"
 import { Customer, Product } from "@prisma/client";
-import { chooseStatus, formatRupiah, getStatusVariant, toastResponse } from "@/lib/my-utils";
+import { chooseStatus, formatRupiah, getStatusVariant, newParam, toastResponse } from "@/lib/my-utils";
 import { CartItem } from "@/interface/actionType";
 import {
     Dialog,
@@ -27,6 +27,9 @@ import { InputHook } from "@/components/form-hook";
 import { CustomerModelNew, CustomerModelType } from "@/lib/schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { createCustomerNew } from "@/action/customer-action";
+import { useRouter } from "next/navigation";
+import { useDebounceLoad } from "@/hooks/use-debounce";
+import { LoadingSpinText } from "@/components/loading-spin";
 
 export function POSPage({ products, customers }: { customers: Customer[], products: Product[] }) {
     const [ cartItems, setCartItems ] = useState<CartItem[]>([])
@@ -417,7 +420,17 @@ export function SelectCustomer(
     const [ open, setOpen ] = useState(false);
     const [ search, setSearch ] = useState("");
     const [ loading, setLoading ] = useState(false)
-    // console.log(ageValid)
+    const router = useRouter()
+
+    const { value, isLoading } = useDebounceLoad(search, 1000);
+
+    useEffect(() => {
+        if (value.trim()) {
+            router.push(newParam({ name: value }));
+        }
+    }, [ value, router ]);
+
+
     const filteredCustomers = useMemo(() =>
             customers.filter(({ name, status }) =>
                 name.toLowerCase().includes(search.toLowerCase()) &&
@@ -469,39 +482,49 @@ export function SelectCustomer(
                 <div className="grid grid-cols-1 gap-10">
 
                     <div className="space-y-4">
-
-                        <Input
-                            placeholder="Cari nama pelanggan..."
-                            value={ search }
-                            onChange={ (e) => setSearch(e.target.value) }
-                        />
+                        <div className="flex gap-2 ">
+                            <Input
+                                name={ 'name' }
+                                placeholder="Cari nama pelanggan..."
+                                value={ search }
+                                onChange={ (e) => setSearch(e.target.value) }
+                            />
+                            <Button
+                                onClick={ () => router.push(newParam({ name: search })) }
+                                type="button">
+                                <Search/>
+                            </Button>
+                        </div>
 
                         <div className="space-y-2 max-h-[300px] overflow-y-auto">
-                            { filteredCustomers.length === 0 && (
+                            { isLoading ? (
+                                <LoadingSpinText message={ 'Search Customers ...' }/>
+                            ) : filteredCustomers.length === 0 ? (
                                 <p className="text-sm text-muted-foreground">Tidak ada pelanggan ditemukan.</p>
+                            ) : (
+                                filteredCustomers.map((customer) => (
+                                    <DialogClose asChild key={ customer.id }>
+                                        <Button
+                                            variant="outline"
+                                            className="w-full justify-start text-left h-14"
+                                            onClick={ () => {
+                                                onSelectAction?.(customer);
+                                            } }
+                                        >
+                                            <div>
+                                                <h1 className="font-medium">{ customer.name }</h1>
+                                                <p className="text-sm text-muted-foreground">
+                                                    Usia: { customer.age } • Total: { customer.totalPurchase } •
+                                                    Status:{ " " }
+                                                    <Badge variant={ getStatusVariant(customer.status) }>
+                                                        { chooseStatus(customer.status) }
+                                                    </Badge>
+                                                </p>
+                                            </div>
+                                        </Button>
+                                    </DialogClose>
+                                ))
                             ) }
-
-                            { filteredCustomers.map((customer) => (
-                                <DialogClose asChild key={ customer.id }>
-                                    <Button
-                                        variant="outline"
-                                        className="w-full justify-start text-left h-14"
-                                        onClick={ () => {
-                                            onSelectAction?.(customer);
-                                        } }
-                                    >
-                                        <div>
-                                            <h1 className="font-medium">{ customer.name }</h1>
-                                            <p className="text-sm text-muted-foreground">
-                                                Usia: { customer.age } • Total: { customer.totalPurchase } • Status
-                                                : <Badge
-                                                variant={ getStatusVariant(customer.status) }>
-                                                { chooseStatus(customer.status) }</Badge>
-                                            </p>
-                                        </div>
-                                    </Button>
-                                </DialogClose>
-                            )) }
                         </div>
                     </div>
 

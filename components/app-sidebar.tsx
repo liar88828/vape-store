@@ -12,7 +12,7 @@ import {
     FlaskConical,
     Gift,
     Home,
-    LogOut,
+    LogOutIcon,
     Package,
     Settings,
     ShoppingCart,
@@ -48,6 +48,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { formatRupiahShort } from "@/lib/my-utils";
 import { twMerge } from "tailwind-merge"
+import { deleteCookie } from "@/action/auth-action";
 
 export function AppSidebar({ lowStockProducts, totalTransaction, totalSellToday }: {
     lowStockProducts: { stock: number }[],
@@ -64,7 +65,7 @@ export function AppSidebar({ lowStockProducts, totalTransaction, totalSellToday 
         {
             title: "Dashboard",
             icon: Home,
-            path: "/",
+            path: "/dashboard",
             description: "Overview & Analytics",
         },
         {
@@ -135,8 +136,8 @@ export function AppSidebar({ lowStockProducts, totalTransaction, totalSellToday 
                 <div className="flex items-center px-4 py-4">
                     <div
                         className="flex items-center justify-center w-10 h-10 rounded-xl shadow-lg
-                                     bg-gradient-to-br from-blue-600 to-indigo-400
-                                     dark:from-blue-400 dark:to-indigo-600">
+                                             bg-gradient-to-br from-blue-600 to-indigo-400
+                                             dark:from-blue-400 dark:to-indigo-600">
 
                         <Zap className="h-6 w-6 text-white dark:text-gray-900"/>
                     </div>
@@ -344,22 +345,8 @@ export function AppSidebar({ lowStockProducts, totalTransaction, totalSellToday 
                                             className="bg-blue-100 text-blue-600 text-sm font-medium">AD</AvatarFallback>
                                     </Avatar>
                                     <div className="flex-1 text-left min-w-0">
-                                        <p
-                                            className={ twMerge(
-                                                "text-sm font-medium text-gray-900 truncate",
-                                                "dark:text-gray-100"
-                                            ) }
-                                        >
-                                            Admin Store
-                                        </p>
-                                        <p
-                                            className={ twMerge(
-                                                "text-xs truncate",
-                                                "dark:text-gray-400"
-                                            ) }
-                                        >
-                                            admin@vapestore.com
-                                        </p>
+                                        <p className={ "text-sm font-medium truncate" }>Admin Store</p>
+                                        <p className={ "text-xs truncate" }>admin@vapestore.com</p>
                                     </div>
                                     <ChevronDown className="h-4 w-4 text-gray-400"/>
                                 </div>
@@ -368,14 +355,19 @@ export function AppSidebar({ lowStockProducts, totalTransaction, totalSellToday 
                         <DropdownMenuContent align="end" className="w-56">
                             <DropdownMenuLabel>My Account</DropdownMenuLabel>
                             <DropdownMenuSeparator/>
-                            <DropdownMenuItem>
-                                <User className="mr-2 h-4 w-4"/>
-                                <span>Profile</span>
-                            </DropdownMenuItem>
+                            <Link href="/profile">
+                                <DropdownMenuItem>
+                                    <User className="mr-2 h-4 w-4"/>
+                                    <span>Profile</span>
+                                </DropdownMenuItem>
+                            </Link>
+                            <Link href="/setting">
                             <DropdownMenuItem>
                                 <Settings className="mr-2 h-4 w-4"/>
                                 <span>Settings</span>
                             </DropdownMenuItem>
+                            </Link>
+                            <Link href="/test">
                             <DropdownMenuItem>
                                 <Bell className="mr-2 h-4 w-4"/>
                                 <span>Notifications</span>
@@ -385,9 +377,10 @@ export function AppSidebar({ lowStockProducts, totalTransaction, totalSellToday 
                                     </Badge>
                                 ) }
                             </DropdownMenuItem>
+                            </Link>
                             <DropdownMenuSeparator/>
-                            <DropdownMenuItem className="text-red-600">
-                                <LogOut className="mr-2 h-4 w-4"/>
+                            <DropdownMenuItem className="text-red-600" onClick={ deleteCookie }>
+                                <LogOutIcon className="mr-2 h-4 w-4"/>
                                 <span>Log out</span>
                             </DropdownMenuItem>
                         </DropdownMenuContent>

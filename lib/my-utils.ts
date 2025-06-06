@@ -110,9 +110,13 @@ export const toastResponse = (
     {
         response,
         onSuccess = () => {
-        }
+        },
+        onFailure = () => {
+        },
     }: {
-        response: ActionResponse, onSuccess?: () => void
+        response: ActionResponse,
+        onSuccess?: () => void,
+        onFailure?: () => void
     }
 ) => {
     if (response.success) {
@@ -120,6 +124,7 @@ export const toastResponse = (
         onSuccess()
     } else {
         toast.error(response.message)
+        onFailure()
     }
 }
 
@@ -184,4 +189,17 @@ export function truncateText(text: string, maxLength: number) {
     return text.length > maxLength ? text.slice(0, maxLength) + '...' : text;
 }
 
-// Usage in component
+export function newParam(params: Record<string, string | undefined>) {
+    const searchParams = new URLSearchParams();
+
+    for (const key in params) {
+        const value = params[key];
+        if (value) {
+            searchParams.set(key, value);
+        }
+    }
+
+    return `?${ searchParams.toString() }`;
+}
+
+

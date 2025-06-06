@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { CustomerModel } from "@/lib/generated/zod";
 import { ActionResponse } from "@/interface/actionType";
 import { CustomerModelComplete, CustomerModelNew, CustomerModelType } from "@/lib/schema";
-import { Customer, PreOrder, Product, Sale } from "@prisma/client";
+import { Customer, PreOrder, Product, Sale, SalesItem } from "@prisma/client";
 
 // Create a new customer
 export async function createCustomerNew(formData: CustomerModelType): Promise<ActionResponse<Customer>> {
@@ -80,8 +80,12 @@ export async function createCustomer(formData: CustomerModelType): Promise<Actio
 
 }
 
-export async function getAllCustomers(): Promise<Customer[]> {
-    return prisma.customer.findMany();
+export async function getAllCustomers(name: string): Promise<Customer[]> {
+    return prisma.customer.findMany({
+        where: { name: { contains: name } },
+        take: 1,
+        orderBy: { createdAt: 'desc' }
+    });
 }
 
 export type CustomerRelational = Customer & {
@@ -164,3 +168,32 @@ export async function deleteCustomer(id: Customer['id']): Promise<ActionResponse
         message: "Pelanggan berhasil dihapus",
     };
 }
+
+export type CustomerComplete = Customer & {
+    Sales: (Sale & {
+        SaleItems: (SalesItem & {
+            product: Product
+        })[]
+    })[]
+};
+export const getDataCustomer = async (customerId: number): Promise<CustomerComplete | null> => {
+    if (!customerId) {
+        return null
+    }
+
+    return prisma.customer.findUnique({
+        where: { id: customerId },
+        include: {
+            Sales: {
+                include: {
+                    SaleItems: {
+                        include: {
+                            product: true,
+                        },
+                    },
+                },
+                orderBy: { date: 'desc' },
+            },
+        },
+    });
+};
