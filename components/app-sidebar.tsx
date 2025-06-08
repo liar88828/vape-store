@@ -19,7 +19,6 @@ import {
     TrendingUp,
     User,
     Users,
-    Zap,
 } from "lucide-react"
 import {
     Sidebar,
@@ -49,6 +48,7 @@ import {
 import { formatRupiahShort } from "@/lib/my-utils";
 import { twMerge } from "tailwind-merge"
 import { deleteCookie } from "@/action/auth-action";
+import Image from "next/image";
 
 export function AppSidebar({ lowStockProducts, totalTransaction, totalSellToday }: {
     lowStockProducts: { stock: number }[],
@@ -134,13 +134,17 @@ export function AppSidebar({ lowStockProducts, totalTransaction, totalSellToday 
         <Sidebar>
             <SidebarHeader className={ 'border-b' }>
                 <div className="flex items-center px-4 py-4">
-                    <div
-                        className="flex items-center justify-center w-10 h-10 rounded-xl shadow-lg
-                                             bg-gradient-to-br from-blue-600 to-indigo-400
-                                             dark:from-blue-400 dark:to-indigo-600">
+                    <picture
+                        className={ ' rounded-xl shadow-lg bg-gradient-to-br from-blue-600 to-indigo-400 dark:from-blue-400 dark:to-indigo-600 p-0.5' }>
 
-                        <Zap className="h-6 w-6 text-white dark:text-gray-900"/>
-                    </div>
+                        <Image src="/logo.png" alt="logo image"
+                               className="  size-10 invert dark:invert-0 "
+                               width={ 500 }
+                               height={ 500 }
+                        />
+                    </picture>
+
+                    {/*<Zap className="h-6 w-6 text-white dark:text-gray-900"/>*/ }
                     <div className="ml-3 flex-1">
                         <h1 className={ "text-lg font-bold  " }>VapeStore</h1>
                         <p className={ "text-xs text-muted-foreground" }>Management System</p>

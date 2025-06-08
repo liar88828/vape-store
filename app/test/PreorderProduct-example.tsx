@@ -1,10 +1,8 @@
-import { PreorderProduct } from "@/action/product-action";
-import { PreOrderInvoice } from "@/components/invoice-preorder";
 import React from "react";
 
-export default function page() {
-
-    const orderData: PreorderProduct = {
+export function page() {
+    // : PreorderProduct
+    const orderData = {
         id: 3,
         status: '',
         customerId: 10,
@@ -36,7 +34,7 @@ export default function page() {
     };
     return (
         <div>
-            <PreOrderInvoice orderData={ orderData }/>
+            {/*<PreOrderInvoice orderData={ orderData }/>*/ }
         </div>
     )
 }

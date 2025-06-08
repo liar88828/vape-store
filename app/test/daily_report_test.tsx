@@ -97,10 +97,10 @@ interface ReportsPageProps {
     }
 }
 
-export default function App() {
-    return <DailySalesReport_x5_indonesia sales={ salesData.sales } trending={ salesData.trending } range={ 'today' }
-                                          stats={ salesData.stats }/>;
-}
+// export default function App() {
+//     return <DailySalesReport_x5_indonesia sales={ salesData.sales } trending={ salesData.trending } range={ 'today' }
+//                                           stats={ salesData.stats }/>;
+// }
 
 export function DailySalesReport_x5_english(props: ReportsPageProps) {
     // @ts-ignore

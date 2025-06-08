@@ -124,16 +124,12 @@ export async function getPreOrder(): Promise<PreorderProduct[]> {
     })
 }
 
-export async function getTopSellingProduct(limit: number = 5): Promise<Product[]> {
+export async function getTopSellingProduct(limit: number = 5): Promise<TopSellingProduct[]> {
     const topProducts = await prisma.salesItem.groupBy({
         by: [ 'productId' ],
-        _sum: {
-            quantity: true,
-        },
+        _sum: { quantity: true },
         orderBy: {
-            _sum: {
-                quantity: 'desc',
-            },
+            _sum: { quantity: 'desc' },
         },
         take: limit,
     });
@@ -157,7 +153,7 @@ export async function getTopSellingProduct(limit: number = 5): Promise<Product[]
     return topProducts.map(item => {
         const product = products.find(p => p.id === item.productId)
         if (product) {
-            const data: TopSellingProduct = {
+            return {
                 type: product.type,
                 minStock: product.minStock,
                 stock: product.stock,
@@ -170,8 +166,11 @@ export async function getTopSellingProduct(limit: number = 5): Promise<Product[]
                 category: product.category,
                 image: product.image,
                 totalSold: item._sum.quantity ?? 0,
-            }
-            return data
+                createdAt: product.createdAt,
+                updatedAt: product.updatedAt,
+                sold: product.sold,
+                expired: product.expired,
+            } satisfies TopSellingProduct
         }
     }).filter(item => item !== undefined)
 }

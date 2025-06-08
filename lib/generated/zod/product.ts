@@ -8,11 +8,13 @@ export const ProductModel = z.object({
     price: z.number().int().min(1),
     stock: z.number().int().min(1),
     minStock: z.number().int(),
+    sold: z.number().int(),
     image: z.string().min(1),
     description: z.string().min(1),
     nicotineLevel: z.string().nullish(),
     flavor: z.string().nullish(),
     type: z.string().min(1),
+    expired: z.date().nullish(),
     createdAt: z.date().optional(),
     updatedAt: z.date().optional(),
 })

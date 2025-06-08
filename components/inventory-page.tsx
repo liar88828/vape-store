@@ -15,7 +15,7 @@ import { PreorderProduct } from "@/action/product-action";
 import { preOrderProduct } from "@/action/inventory-action";
 import { SelectCustomer } from "@/components/pos-page";
 import { Button } from "@/components/ui/button"
-import { DatePicker } from "./form-hook"
+import { DatePickerForm } from "./form-hook"
 import { PreOrderDialog } from "./invoice-preorder"
 
 interface InventoryPageProps {
@@ -241,7 +241,7 @@ function ReStockModal({ product, customers }: { product: Product, customers: Cus
 
                         <div>
                             <Label>Tanggal Estimasi</Label>
-                            <DatePicker date={ date } setDate={ setDate }/>
+                            <DatePickerForm date={ date } setDate={ setDate }/>
                         </div>
 
                     </div>

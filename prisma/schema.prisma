@@ -45,6 +45,7 @@ model Product {
     price         Int /// @zod.min(1)
     stock         Int /// @zod.min(1)
     minStock      Int     @default(5)
+    sold Int @default(0)
     image         String /// @zod.min(1)
     description   String /// @zod.min(1)
     nicotineLevel String? // nullable
@@ -54,16 +55,17 @@ model Product {
     PreOrders  PreOrder[]
     SalesItems SalesItem[]
 
-    createdAt DateTime @default(now()) ///@zod.optional()
-    updatedAt DateTime @updatedAt ///@zod.optional()
+    expired   DateTime?
+    createdAt DateTime  @default(now()) ///@zod.optional()
+    updatedAt DateTime  @updatedAt ///@zod.optional()
 }
 
 model Customer {
     id            Int      @id @default(autoincrement())
     name          String /// @zod.min(1 )
-    age           Int /// @zod.max(80 )
-    totalPurchase Int /// @zod.min(1)
-    status        String /// @zod.min(1)
+    age           Int    @default(0) /// @zod.max(80 )
+    totalPurchase Int    @default(0) /// @zod.min(0)
+    status        String @default("Pending") /// @zod.min(1)
     lastPurchase  DateTime
 
     Sales     Sale[]
@@ -135,4 +137,58 @@ model User {
     password  String /// @zod.min(1)
     createdAt DateTime @default(now()) ///@zod.optional()
     updatedAt DateTime @updatedAt ///@zod.optional()
+}
+
+model Store {
+    id          String   @id @default(uuid())
+    name        String /// @zod.min(1)
+    currency    String /// @zod.min(1)
+    description String /// @zod.min(1)
+    phone       String /// @zod.min(1)
+    address     String /// @zod.min(1)
+    email       String   @unique /// @zod.email().min(1)
+    createdAt   DateTime @default(now()) ///@zod.optional()
+    updatedAt   DateTime @updatedAt ///@zod.optional()
+}
+
+model Payment {
+    id          String        @id @default(uuid())
+    isCod       Boolean
+    valueCod    Int /// @zod.min(0)
+    PaymentList PaymentList[]
+}
+
+model PaymentList {
+    id        String   @id @default(uuid())
+    title     String /// @zod.min(1)
+    value     String /// @zod.min(1)
+    fee       Int /// @zod.min(0)
+    Payment   Payment? @relation(fields: [paymentId], references: [id])
+    paymentId String?
+}
+
+model Inventory {
+    id                String  @id @default(uuid())
+    trackInventory    Boolean
+    lowStockThreshold Int /// @zod.min(0)
+    allowBackorders   Boolean
+    autoReorder       Boolean
+}
+
+model Shipping {
+    id                    String         @id @default(uuid())
+    freeShippingThreshold Int /// @zod.min(0)
+    handlingFee           Int /// @zod.min(0)
+    internationalShipping Boolean
+    internationalRate     Int /// @zod.min(0)
+    ShippingList          ShippingList[]
+}
+
+model ShippingList {
+    id         String    @id @default(uuid())
+    name       String /// @zod.min(1)
+    price      Int /// @zod.min(0)
+    rates      Int /// @zod.min(0)
+    Shipping   Shipping? @relation(fields: [shippingId], references: [id])
+    shippingId String?
 }

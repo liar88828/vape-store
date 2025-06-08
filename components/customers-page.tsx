@@ -23,7 +23,7 @@ import { FormProvider, useForm } from "react-hook-form";
 import { CustomerModel } from "@/lib/generated/zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { InputDateHook, InputHook, SelectHook } from "@/components/form-hook";
+import { InputDateForm, InputForm, SelectForm } from "@/components/form-hook";
 import { CustomerModelComplete } from "@/lib/schema";
 import { createCustomer, CustomerRelational, deleteCustomer, updateCustomer } from "@/action/customer-action";
 import { useState } from "react";
@@ -31,6 +31,60 @@ import { useState } from "react";
 interface CustomersPageProps {
     customers: CustomerRelational[],
     members: MemberTier[]
+}
+
+function VerificationAge(props: { length: number, filter: CustomerRelational[], numbers: any[] }) {
+    return <>
+        {/* Age Verification System */ }
+        <Card className="mb-6">
+            <CardHeader>
+                <CardTitle className="flex items-center">
+                    <Users className="h-5 w-5 mr-2"/>
+                    Sistem Verifikasi Umur
+                </CardTitle>
+            </CardHeader>
+            <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <h3 className="font-medium mb-4">Pengaturan Verifikasi</h3>
+                        <div className="space-y-3">
+                            <div className="flex items-center space-x-2">
+                                <Checkbox id="require-id" defaultChecked/>
+                                <Label htmlFor="require-id">Wajib verifikasi KTP</Label>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                                <Checkbox id="photo-verification"/>
+                                <Label htmlFor="photo-verification">Verifikasi foto</Label>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                                <Checkbox id="age-reminder" defaultChecked/>
+                                <Label htmlFor="age-reminder">Reminder umur di setiap transaksi</Label>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 className="font-medium mb-4">Statistik Verifikasi</h3>
+                        <div className="space-y-2">
+                            <div className="flex justify-between">
+                                <span>Total pelanggan terverifikasi:</span>
+                                <span className="font-medium">{ props.length }</span>
+                            </div>
+                            <div className="flex justify-between">
+                                <span>Verifikasi ditolak bulan ini:</span>
+                                <span
+                                    className="font-medium text-red-600">{ props.filter.length }</span>
+                            </div>
+                            <div className="flex justify-between">
+                                <span>Rata-rata umur pelanggan:</span>
+                                <span
+                                    className="font-medium">{ calculateAverage(props.numbers) } tahun</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </CardContent>
+        </Card>
+    </>;
 }
 
 export function CustomersPage({ customers, members }: CustomersPageProps) {
@@ -61,55 +115,9 @@ export function CustomersPage({ customers, members }: CustomersPageProps) {
                 <ModalTambahCustomer/>
             </div>
 
-            {/* Age Verification System */ }
-            <Card className="mb-6">
-                <CardHeader>
-                    <CardTitle className="flex items-center">
-                        <Users className="h-5 w-5 mr-2"/>
-                        Sistem Verifikasi Umur
-                    </CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <h3 className="font-medium mb-4">Pengaturan Verifikasi</h3>
-                            <div className="space-y-3">
-                                <div className="flex items-center space-x-2">
-                                    <Checkbox id="require-id" defaultChecked/>
-                                    <Label htmlFor="require-id">Wajib verifikasi KTP</Label>
-                                </div>
-                                <div className="flex items-center space-x-2">
-                                    <Checkbox id="photo-verification"/>
-                                    <Label htmlFor="photo-verification">Verifikasi foto</Label>
-                                </div>
-                                <div className="flex items-center space-x-2">
-                                    <Checkbox id="age-reminder" defaultChecked/>
-                                    <Label htmlFor="age-reminder">Reminder umur di setiap transaksi</Label>
-                                </div>
-                            </div>
-                        </div>
-                        <div>
-                            <h3 className="font-medium mb-4">Statistik Verifikasi</h3>
-                            <div className="space-y-2">
-                                <div className="flex justify-between">
-                                    <span>Total pelanggan terverifikasi:</span>
-                                    <span className="font-medium">{ customers.length }</span>
-                                </div>
-                                <div className="flex justify-between">
-                                    <span>Verifikasi ditolak bulan ini:</span>
-                                    <span
-                                        className="font-medium text-red-600">{ customers.filter(item => item.status === 'rejected').length }</span>
-                                </div>
-                                <div className="flex justify-between">
-                                    <span>Rata-rata umur pelanggan:</span>
-                                    <span
-                                        className="font-medium">{ calculateAverage(customers.map(item => item.age)) } tahun</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </CardContent>
-            </Card>
+            {/*<VerificationAge length={ customers.length }*/ }
+            {/*                 filter={ customers.filter(item => item.status === 'rejected') }*/ }
+            {/*                 numbers={ customers.map(item => item.age) }/>*/ }
 
 
             {/* Customer List */ }
@@ -373,12 +381,12 @@ export function ModalTambahCustomer() {
                 </DialogHeader>
                 <FormProvider { ...methods }>
                     <form onSubmit={ onSubmit } className="grid gap-4">
-                        <InputHook name="name" title="Nama" placeholder="Nama pelanggan"/>
-                        <InputHook name="age" title="Umur" placeholder="0" type="number"/>
-                        <InputHook name="totalPurchase" title="Total Pembelian" placeholder="0" type="number"/>
-                        <InputDateHook name="lastPurchase" title="Tanggal Pembelian Terakhir"
+                        <InputForm name="name" title="Nama" placeholder="Nama pelanggan"/>
+                        <InputForm name="age" title="Umur" placeholder="0" type="number"/>
+                        <InputForm name="totalPurchase" title="Total Pembelian" placeholder="0" type="number"/>
+                        <InputDateForm name="lastPurchase" title="Tanggal Pembelian Terakhir"
                         />
-                        <SelectHook
+                        <SelectForm
                             name="status"
                             label="Status"
                             placeholder="Pilih status"
@@ -434,12 +442,12 @@ export function ModalEditCustomer({ customer }: { customer: CustomerModelComplet
                 </DialogHeader>
                 <FormProvider { ...methods }>
                     <form onSubmit={ onSubmit } className="grid gap-4">
-                        <InputHook name="name" title="Nama" placeholder="Nama pelanggan"/>
-                        <InputHook name="age" title="Umur" placeholder="0" type="number"/>
-                        <InputHook name="totalPurchase" title="Total Pembelian" placeholder="0" type="number"/>
-                        <InputDateHook name="lastPurchase" title="Tanggal Pembelian Terakhir"
+                        <InputForm name="name" title="Nama" placeholder="Nama pelanggan"/>
+                        <InputForm name="age" title="Umur" placeholder="0" type="number"/>
+                        <InputForm name="totalPurchase" title="Total Pembelian" placeholder="0" type="number"/>
+                        <InputDateForm name="lastPurchase" title="Tanggal Pembelian Terakhir"
                         />
-                        <SelectHook
+                        <SelectForm
                             name="status"
                             label="Status"
                             placeholder="Pilih status"

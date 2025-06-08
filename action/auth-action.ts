@@ -36,6 +36,10 @@ export async function registerAction(rawData: RegisterFormData): Promise<ActionR
         data: { name, email, password: hashedPassword },
     });
 
+    await prisma.customer.create({
+        data: { name, age: 0, lastPurchase: new Date(), status: "Pending", totalPurchase: 0 }
+    })
+
     redirect("/login"); // or wherever you want
 }
 

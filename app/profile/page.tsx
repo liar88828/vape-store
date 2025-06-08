@@ -5,7 +5,7 @@ import { DataNotFound, EmptyDataPage } from "@/components/empty-data";
 
 async function Page() {
     const customerData = await getDataCustomer(1)
-    console.log(customerData)
+    // console.log(customerData)
     if (!customerData) {
         return <DataNotFound message={ 'Data is Empty' }/>
 

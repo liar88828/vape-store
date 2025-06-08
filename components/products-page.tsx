@@ -20,8 +20,7 @@ import {
 } from "@/components/ui/dialog"
 import { ChevronLeft, ChevronRight, Eye, Pencil, Plus, Trash2, XIcon } from "lucide-react"
 import { choose, formatRupiah, getValueLabel, toastResponse, truncateText, variantStatus } from "@/lib/my-utils";
-import { Product } from "@/lib/data";
-import { InputHook, SelectHook, TextareaHook } from "@/components/form-hook";
+import { InputForm, SelectForm, TextareaForm } from "@/components/form-hook";
 import { FormProvider, useForm } from "react-hook-form";
 import { ProductModel, } from "@/lib/generated/zod";
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -30,7 +29,7 @@ import { toast } from "sonner";
 import { ProductModelType } from "@/lib/schema";
 
 interface ProductsPageProps {
-    products: Product[]
+    products: ProductModelType[]
 }
 
 export function ProductsPage({ products }: ProductsPageProps) {
@@ -338,7 +337,7 @@ export function ModalProductTambah() {
             })
         }
     });
-    // console.log(methods.formState.errors)
+
     return (
         <Dialog open={ open } onOpenChange={ setOpen }>
             <DialogTrigger asChild>
@@ -355,9 +354,9 @@ export function ModalProductTambah() {
                 <FormProvider { ...methods }>
                     <form onSubmit={ onSubmit } className={ 'space-y-4' }>
                         <div className="grid grid-cols-2 gap-4">
-                            <InputHook title="Nama Produk" name="name" placeholder="Nama produk"/>
+                            <InputForm title="Nama Produk" name="name" placeholder="Nama produk"/>
 
-                            <SelectHook
+                            <SelectForm
                                 name="category"
                                 label="Kategori"
                                 placeholder="Pilih kategori"
@@ -369,11 +368,11 @@ export function ModalProductTambah() {
                                 ] }
                             />
 
-                            <InputHook name="price" title="Harga" placeholder="0" type="number"/>
-                            <InputHook name="stock" title="Stok Awal" placeholder="0" type="number"/>
-                            <InputHook name="minStock" title="Minimum Stok" placeholder="0" type="number"/>
+                            <InputForm name="price" title="Harga" placeholder="0" type="number"/>
+                            <InputForm name="stock" title="Stok Awal" placeholder="0" type="number"/>
+                            <InputForm name="minStock" title="Minimum Stok" placeholder="0" type="number"/>
 
-                            <SelectHook
+                            <SelectForm
                                 name="nicotineLevel"
                                 label="Level Nikotin (untuk liquid)"
                                 placeholder="Pilih level"
@@ -387,9 +386,9 @@ export function ModalProductTambah() {
                                 ] }
                             />
 
-                            <InputHook name="flavor" title="Rasa (untuk liquid)" placeholder="Rasa liquid"/>
+                            <InputForm name="flavor" title="Rasa (untuk liquid)" placeholder="Rasa liquid"/>
 
-                            <SelectHook
+                            <SelectForm
                                 name="type"
                                 label="Tipe Device"
                                 placeholder="Tipe Device"
@@ -403,8 +402,8 @@ export function ModalProductTambah() {
 
 
                         </div>
-                        <InputHook name="image" title="URL Gambar" placeholder="Link gambar produk" type="url"/>
-                        <TextareaHook name="description" title="Deskripsi" placeholder="Deskripsi produk"/>
+                        <InputForm name="image" title="URL Gambar" placeholder="Link gambar produk" type="url"/>
+                        <TextareaForm name="description" title="Deskripsi" placeholder="Deskripsi produk"/>
                         <DialogFooter className="pt-4">
                             <Button type="submit">Simpan Produk</Button>
                         </DialogFooter>
@@ -415,7 +414,7 @@ export function ModalProductTambah() {
     );
 }
 
-export function ProductDetailDialog({ product }: { product: Product }) {
+export function ProductDetailDialog({ product }: { product: ProductModelType }) {
 
     function DetailItem({ label, value }: { label: string; value: string | number }) {
         return (
@@ -532,9 +531,9 @@ export function ModalProductUpdate({ product }: { product: ProductModelType }) {
                 <FormProvider { ...methods }>
                     <form onSubmit={ onSubmit } className="space-y-4">
                         <div className="grid grid-cols-2 gap-4">
-                            <InputHook title="Nama Produk" name="name" placeholder="Nama produk"/>
+                            <InputForm title="Nama Produk" name="name" placeholder="Nama produk"/>
 
-                            <SelectHook
+                            <SelectForm
                                 name="category"
                                 label="Kategori"
                                 placeholder="Pilih kategori"
@@ -546,11 +545,11 @@ export function ModalProductUpdate({ product }: { product: ProductModelType }) {
                                 ] }
                             />
 
-                            <InputHook name="price" title="Harga" placeholder="0" type="number"/>
-                            <InputHook name="stock" title="Stok Awal" placeholder="0" type="number"/>
-                            <InputHook name="minStock" title="Minimum Stok" placeholder="0" type="number"/>
+                            <InputForm name="price" title="Harga" placeholder="0" type="number"/>
+                            <InputForm name="stock" title="Stok Awal" placeholder="0" type="number"/>
+                            <InputForm name="minStock" title="Minimum Stok" placeholder="0" type="number"/>
 
-                            <SelectHook
+                            <SelectForm
                                 name="nicotineLevel"
                                 label="Level Nikotin (untuk liquid)"
                                 placeholder="Pilih level"
@@ -564,12 +563,12 @@ export function ModalProductUpdate({ product }: { product: ProductModelType }) {
                                 ] }
                             />
 
-                            <InputHook name="flavor" title="Rasa (untuk liquid)" placeholder="Rasa liquid"/>
-                            <InputHook name="type" title="Tipe Produk" placeholder="Tipe produk"/>
+                            <InputForm name="flavor" title="Rasa (untuk liquid)" placeholder="Rasa liquid"/>
+                            <InputForm name="type" title="Tipe Produk" placeholder="Tipe produk"/>
                         </div>
 
-                        <InputHook name="image" title="URL Gambar" placeholder="Link gambar produk" type="text"/>
-                        <TextareaHook name="description" title="Deskripsi" placeholder="Deskripsi produk"/>
+                        <InputForm name="image" title="URL Gambar" placeholder="Link gambar produk" type="text"/>
+                        <TextareaForm name="description" title="Deskripsi" placeholder="Deskripsi produk"/>
 
                         <DialogFooter className="pt-4">
                             <Button type="submit">Perbarui Produk</Button>

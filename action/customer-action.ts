@@ -83,8 +83,8 @@ export async function createCustomer(formData: CustomerModelType): Promise<Actio
 export async function getAllCustomers(name: string): Promise<Customer[]> {
     return prisma.customer.findMany({
         where: { name: { contains: name } },
+        orderBy: { createdAt: 'desc' },
         take: 1,
-        orderBy: { createdAt: 'desc' }
     });
 }
 

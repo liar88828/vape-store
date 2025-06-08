@@ -10,9 +10,10 @@ import { formatDateIndo, formatRupiah, formatRupiahShort } from "@/lib/my-utils"
 import { Product } from "@prisma/client";
 import { LastBuyer } from "@/action/sale-action";
 import { cn } from "@/lib/utils"
+import { TopSellingProduct } from "@/action/product-action";
 
 interface DashboardPageProps {
-    topSelling: Product[],
+    topSelling: TopSellingProduct[],
     lastBuyer: LastBuyer[],
     preOrders: number,
     lowStockProducts: Product[],
@@ -316,8 +317,8 @@ export function DashboardPage(
                                         </div>
                                     </div>
                                     <div className="text-right">
-                                        <p className={ "font-bold text-primary" }>12312 terjual</p>
-                                        <p className={ "text-sm text-muted-foreground" }>Rp { product.price.toLocaleString() }</p>
+                                        <p className={ "font-bold text-primary" }>{ product.totalSold } terjual</p>
+                                        <p className={ "text-sm text-muted-foreground" }> { formatRupiah(product.price) }</p>
                                     </div>
                                 </div>
                             )) }

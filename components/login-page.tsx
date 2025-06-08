@@ -3,7 +3,7 @@
 import { FormProvider, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Card, CardContent, CardDescription, CardFooter, CardTitle } from "@/components/ui/card";
-import { InputHook } from "@/components/form-hook";
+import { InputForm } from "@/components/form-hook";
 import { Button } from "@/components/ui/button";
 import { loginAction } from "@/action/auth-action";
 import { useRouter } from "next/navigation";
@@ -67,34 +67,34 @@ export default function LoginPage() {
                                         <CardDescription>Please enter your login credentials to access your
                                             account.</CardDescription>
                                     </div>
-                                    <InputHook
+                                    <InputForm
                                         name="email"
                                         title="Email"
                                         placeholder="you@example.com"
                                         type="email"
                                     />
-                                    <InputHook
+                                    <InputForm
                                         name="password"
                                         title="Password"
                                         placeholder="********"
                                         type="password"
                                     />
 
-                                    <div className="flex items-center justify-between text-sm">
-                                        <label className="flex items-center gap-2">
-                                            <input
-                                                type="checkbox"
-                                                { ...methods.register("remember") }
-                                                className="rounded border-gray-300"
-                                            />
-                                            Remember me
-                                        </label>
-                                        <Button size={ 'sm' }
-                                                onClick={ () => route.push('/register') }
-                                                variant={ 'link' }>
-                                            Forgot password?
-                                        </Button>
-                                    </div>
+                                    {/*<div className="flex items-center justify-between text-sm">*/ }
+                                    {/*    <label className="flex items-center gap-2">*/ }
+                                    {/*        <input*/ }
+                                    {/*            type="checkbox"*/ }
+                                    {/*            { ...methods.register("remember") }*/ }
+                                    {/*            className="rounded border-gray-300"*/ }
+                                    {/*        />*/ }
+                                    {/*        Remember me*/ }
+                                    {/*    </label>*/ }
+                                    {/*    <Button size={ 'sm' }*/ }
+                                    {/*            onClick={ () => route.push('/register') }*/ }
+                                    {/*            variant={ 'link' }>*/ }
+                                    {/*        Forgot password?*/ }
+                                    {/*    </Button>*/ }
+                                    {/*</div>*/ }
                                     { errorAction &&
 											<p className={ 'text-destructive text-xs' }>{ errorAction }</p> }
                                     <CardFooter className="flex-col gap-2 w-full   p-0">
@@ -115,7 +115,7 @@ export default function LoginPage() {
                         <SlideTransition name={ 'image-page' }>
                             <div className="bg-muted relative hidden md:block">
                                 <img
-                                    src="/placeholder.svg"
+                                    src="https://images.pexels.com/photos/2463125/pexels-photo-2463125.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
                                     alt="Image"
                                     className="absolute inset-0 h-full w-full object-cover dark:brightness-[0.2] dark:grayscale"
                                 />

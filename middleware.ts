@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { signJwt, verifyJwt } from "@/action/jwt-token";
 
 const protectedPaths = [
-    "/dashboard", '/pos', '/test', "/profile", "/settings",//
+    "/dashboard", '/pos', '/test', "/profile", "/setting",//
     '/products', '/inventory', '/customers',//
     '/reports',//
 ];

@@ -23,7 +23,7 @@ import {
 import { createTransaction } from "@/action/sale-action";
 import { Badge } from "@/components/ui/badge";
 import { FormProvider, useForm } from "react-hook-form";
-import { InputHook } from "@/components/form-hook";
+import { InputForm } from "@/components/form-hook";
 import { CustomerModelNew, CustomerModelType } from "@/lib/schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { createCustomerNew } from "@/action/customer-action";
@@ -93,6 +93,20 @@ export function POSPage({ products, customers }: { customers: Customer[], produc
         setCategoryFilter("all")
         setDeviceTypeFilter("all")
     }
+
+    async function onTransaction() {
+        setLoading(true)
+        toastResponse({
+            response: await createTransaction(cartItems, selectedCustomer),
+            onSuccess: () => {
+                setSelectedCustomer(null)
+                setCartItems([])
+            }
+        })
+        setLoading(false)
+
+    }
+
     return (
         <div className="p-6 max-w-7xl mx-auto">
             <h1 className="text-3xl font-bold mb-6">POS Kasir</h1>
@@ -378,17 +392,7 @@ export function POSPage({ products, customers }: { customers: Customer[], produc
                                         </div>
                                         <Button className="w-full" size="lg"
                                                 disabled={ loading || !selectedCustomer }
-                                                onClick={ async () => {
-                                                    setLoading(true)
-                                                    toastResponse({
-                                                        response: await createTransaction(cartItems, selectedCustomer),
-                                                        onSuccess: () => {
-                                                            setLoading(false)
-                                                            setSelectedCustomer(null)
-                                                            setCartItems([])
-                                                        }
-                                                    })
-                                                } }
+                                                onClick={ onTransaction }
                                         >
                                             <ShoppingCart
                                                 className="h-4 w-4 mr-2"/>
@@ -534,7 +538,7 @@ export function SelectCustomer(
 
                         <FormProvider { ...methods }>
                             <form onSubmit={ onSubmit } className="grid gap-4">
-                                <InputHook name="name" title="Tambah Pelangan Baru" placeholder="Nama pelanggan"/>
+                                <InputForm name="name" title="Tambah Pelangan Baru" placeholder="Nama pelanggan"/>
                                 {/*<InputHook name="age" title="Umur" placeholder="0" type="number"/>*/ }
                                 {/*<InputHook name="totalPurchase" title="Total Pembelian" placeholder="0" type="number"/>*/ }
                                 {/*<InputDateHook name="lastPurchase" title="Tanggal Pembelian Terakhir"*/ }

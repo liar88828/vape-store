@@ -6,6 +6,7 @@ import { ModeToggle } from "@/components/theme-provider";
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Bell, Settings } from "lucide-react"
+import Link from "next/link";
 
 type LowStockProduct = { stock: number }
 
@@ -42,12 +43,14 @@ export default function HeaderComponent({ lowStockProducts, isLoggedIn }: Header
                                     </Badge>
                                 ) }
                             </Button>
+                            <Link href={ '/setting' }>
                             <Button variant="outline" size="sm">
                                 <Settings className="h-4 w-4"/>
                                 <span className={ 'hidden sm:block' }>
 
                                     Pengaturan</span>
                             </Button>
+                            </Link>
                             <ModeToggle/>
 
                         </div>

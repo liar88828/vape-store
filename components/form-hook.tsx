@@ -2,7 +2,7 @@ import React, { HTMLInputTypeAttribute } from 'react';
 import { ControllerRenderProps, useFormContext } from "react-hook-form"
 import { Input } from "@/components/ui/input"; // adjust the import path
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -10,15 +10,18 @@ import { CalendarIcon } from "lucide-react"; // or your own UI
 import { format } from "date-fns"
 import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger, } from "@/components/ui/popover"
+import { Switch } from "@/components/ui/switch"
 
 type FormHookProps = {
     name: string;
-    type?: HTMLInputTypeAttribute
+    type?: HTMLInputTypeAttribute;
     title: string;
-    placeholder: string
+    description?: string;
+    placeholder?: string;
+    disabled?: boolean;
 };
 
-export function InputHook({ name, placeholder, title, type = 'text' }: FormHookProps) {
+export function InputForm({ name, description, placeholder, title, disabled, type = 'text' }: FormHookProps) {
     const { control } = useFormContext(); // retrieve control from context
 
     return (
@@ -27,11 +30,13 @@ export function InputHook({ name, placeholder, title, type = 'text' }: FormHookP
                 control={ control }
                 name={ name }
                 render={ ({ field }: { field: ControllerRenderProps, }) => (
-                    <FormItem className="col-span-2">
-                        <FormLabel>{ title }</FormLabel>
+                    <FormItem className="col-span-2 ">
+                        {/* bg-red-300 rounded-md */ }
+                        <FormLabel className={ disabled ? 'text-primary/50' : "" }>{ title }</FormLabel>
                         <FormControl>
                             <Input
                                 type={ type }
+                                disabled={ disabled }
                                 placeholder={ placeholder }
                                 { ...field }
                                 onChange={ (e) => {
@@ -49,6 +54,7 @@ export function InputHook({ name, placeholder, title, type = 'text' }: FormHookP
                                 } }
                             />
                         </FormControl>
+                        { description && <FormDescription>{ description }</FormDescription> }
                         <FormMessage/>
                     </FormItem>
                 ) }
@@ -57,7 +63,7 @@ export function InputHook({ name, placeholder, title, type = 'text' }: FormHookP
     );
 }
 
-export function InputDateHook({ name, title, }: Omit<FormHookProps, 'type' | 'placeholder'>) {
+export function InputDateForm({ name, title, description }: Omit<FormHookProps, 'type' | 'placeholder'>) {
     const { control } = useFormContext(); // retrieve control from context
 
     return (
@@ -99,6 +105,8 @@ export function InputDateHook({ name, title, }: Omit<FormHookProps, 'type' | 'pl
                                 />
                             </PopoverContent>
                         </Popover>
+                        <FormDescription>{ description }</FormDescription>
+
                         <FormMessage/>
                     </FormItem>
                 ) }
@@ -106,7 +114,8 @@ export function InputDateHook({ name, title, }: Omit<FormHookProps, 'type' | 'pl
         </div>
     );
 }
-export function TextareaHook({ name, placeholder, title }: FormHookProps) {
+
+export function TextareaForm({ name, placeholder, title, description }: FormHookProps) {
     const { control } = useFormContext(); // retrieve control from context
 
     return (
@@ -122,6 +131,8 @@ export function TextareaHook({ name, placeholder, title }: FormHookProps) {
                                 placeholder={ placeholder }
                                 { ...field } />
                         </FormControl>
+                        <FormDescription>{ description }</FormDescription>
+
                         <FormMessage/>
                     </FormItem>
                 ) }
@@ -134,10 +145,11 @@ type SelectHookProps = {
     name: string;
     label: string;
     placeholder?: string;
+    description?: string;
     options: { label: string; value: string }[];
 };
 
-export function SelectHook({ name, label, placeholder = "Pilih...", options }: SelectHookProps) {
+export function SelectForm({ name, label, placeholder = "Pilih...", options, description }: SelectHookProps) {
     const { control } = useFormContext();
 
     return (
@@ -167,6 +179,7 @@ export function SelectHook({ name, label, placeholder = "Pilih...", options }: S
                                 </SelectContent>
                             </Select>
                         </FormControl>
+                        <FormDescription>{ description }</FormDescription>
                         <FormMessage/>
                     </FormItem>
                 ) }
@@ -181,7 +194,7 @@ type DatePickerProps = {
     setDate: (date: Date | undefined) => void
 }
 
-export function DatePicker({ date, setDate }: DatePickerProps) {
+export function DatePickerForm({ date, setDate }: DatePickerProps) {
     return (
         <Popover>
             <PopoverTrigger asChild>
@@ -205,5 +218,63 @@ export function DatePicker({ date, setDate }: DatePickerProps) {
                 />
             </PopoverContent>
         </Popover>
+    )
+}
+
+export function SwitchForm({
+                               name,
+                               title,
+                               description,
+                               bordered = false
+                           }: Omit<FormHookProps, 'type' | 'placeholder'> & { bordered?: boolean }) {
+    const { control } = useFormContext(); // retrieve control from context
+
+    return (
+
+        <FormField
+            control={ control }
+            name={ name }
+            render={ ({ field }) => (
+                <FormItem
+
+                    className={ cn("flex flex-row items-center justify-between", {
+                        'shadow-sm rounded-lg border p-3': bordered
+                    }) }>
+                    <div className="space-y-1">
+                        <FormLabel>{ title }</FormLabel>
+                        <FormDescription>{ description }</FormDescription>
+                    </div>
+                    <FormControl>
+                        <Switch
+                            checked={ field.value }
+                            onCheckedChange={ field.onChange }
+                        />
+                    </FormControl>
+                </FormItem>
+            ) }
+        />
+    )
+}
+
+export function SwitchOnlyForm({ name, onChange }: { name: string, onChange?: (value: boolean) => void }) {
+    const { control } = useFormContext();
+    return (
+        <FormField
+            control={ control }
+            name={ name }
+            render={ ({ field }) => (
+                <FormItem>
+                    <FormControl>
+                        <Switch
+                            checked={ field.value }
+                            onCheckedChange={ (value) => {
+                                field.onChange(value); // Update the form state
+                                onChange?.(value);     // Call external handler if provided
+                            } }
+                        />
+                    </FormControl>
+                </FormItem>
+            ) }
+        />
     )
 }

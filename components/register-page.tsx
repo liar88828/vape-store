@@ -3,7 +3,7 @@
 import { FormProvider, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Card, CardContent, CardDescription, CardFooter, CardTitle } from "@/components/ui/card";
-import { InputHook } from "@/components/form-hook";
+import { InputForm } from "@/components/form-hook";
 import { Button } from "@/components/ui/button";
 import { z } from "zod";
 import { registerAction } from "@/action/auth-action";
@@ -48,7 +48,7 @@ export default function RegisterPage() {
                         <SlideTransition name={ 'image-page' }>
                             <div className="bg-muted relative hidden md:block">
                                 <img
-                                    src="/placeholder.svg"
+                                    src="https://images.pexels.com/photos/6963094/pexels-photo-6963094.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
                                     alt="Image"
                                     className="absolute inset-0 h-full w-full object-cover dark:brightness-[0.2] dark:grayscale"
                                 />
@@ -63,20 +63,20 @@ export default function RegisterPage() {
                                         <CardTitle>Register</CardTitle>
                                         <CardDescription>Create a new account ✨</CardDescription>
                                     </div>
-                                    <InputHook name="name" title="Name" placeholder="Your full name"/>
-                                    <InputHook
+                                    <InputForm name="name" title="Name" placeholder="Your full name"/>
+                                    <InputForm
                                         name="email"
                                         title="Email"
                                         placeholder="you@example.com"
                                         type="email"
                                     />
-                                    <InputHook
+                                    <InputForm
                                         name="password"
                                         title="Password"
                                         placeholder="********"
                                         type="password"
                                     />
-                                    <InputHook
+                                    <InputForm
                                         name="confirmPassword"
                                         title="Confirm Password"
                                         placeholder="Repeat password"
@@ -88,7 +88,7 @@ export default function RegisterPage() {
                                         </Button>
                                         <Button type="button"
                                                 variant={ 'outline' }
-                                                onClick={ () => route.back() } className={ 'w-full' }>
+                                                onClick={ () => route.push('/login') } className={ 'w-full' }>
                                             Back
                                         </Button>
 
